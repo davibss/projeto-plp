@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS quiz (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id)
+);
