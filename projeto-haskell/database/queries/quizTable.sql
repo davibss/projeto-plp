@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS quiz (
     name TEXT NOT NULL,
     topic TEXT NOT NULL,
     user_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );

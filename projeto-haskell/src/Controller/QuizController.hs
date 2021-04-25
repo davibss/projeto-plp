@@ -5,22 +5,7 @@ import Entities.Quiz
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromRow
 import Database.SQLite.Simple.ToField
-import Data.UUID
-import Data.UUID.V4
-
-getRandomUUID :: IO String
-getRandomUUID = nextRandom >>= (return . toString)
-
--- Caminho para database
-dbPath :: String
-dbPath = "database/quiz-database.db"
-
-withConn :: String -> (Connection -> IO ()) -> IO ()
-withConn dbName action = do
-   conn <- open dbName
-   action conn
-   close conn
-
+import Utils.Util
 instance FromRow Quiz where
   fromRow = Quiz <$> field
                  <*> field
@@ -55,5 +40,6 @@ updateQuiz quiz = do
 
 deleteQuiz :: String -> IO()
 deleteQuiz quizId = do
-      conn <- open dbPath
-      execute conn "DELETE FROM quiz WHERE quiz_id = ?" (Only quizId)
+    conn <- open dbPath
+    execute_ conn "PRAGMA foreign_keys = ON"
+    execute conn "DELETE FROM quiz WHERE quiz_id = ?" (Only quizId)

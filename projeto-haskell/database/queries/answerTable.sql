@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS answer (
-    id INTEGER PRIMARY KEY,
-    texto TEXT NOT NULL,
-    question_id INTEGER NOT NULL,
-    FOREIGN KEY (question_id) REFERENCES question (id)
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    FOREIGN KEY (question_id) REFERENCES question (question_id) ON DELETE CASCADE
 );

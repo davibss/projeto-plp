@@ -9,5 +9,6 @@ main :: IO ()
 main = do
     -- Este não será o menu principal do sistema, a chamada da função é só para debug
     clearScreen
+    printBorderTerminal 
     userId <- getLineWithMessage "Código do usuário> "
     mainQuiz (read userId)
