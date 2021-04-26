@@ -21,6 +21,7 @@ executable projeto-haskell
   main-is:             Main.hs
   other-modules:       Entities.Quiz
                        Entities.Question
+                       Entities.Answer
                        Controller.QuizController
                        Controller.QuestionController
                        CRUDQuiz

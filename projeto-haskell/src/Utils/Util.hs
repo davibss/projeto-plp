@@ -7,6 +7,7 @@ import Control.Monad.IO.Class
 import System.Console.Haskeline
 import Data.Maybe
 import qualified Control.Monad.Catch
+import Data.Char (ord)
 
 -- caminho para a base de dados
 dbPath :: String
@@ -29,6 +30,23 @@ getLineWithMessage message = do
     putStr message
     hFlush stdout
     getLine
+
+-- função para retornar uma string de uma Maybe
+getMaybeString :: Maybe String -> String
+getMaybeString = fromMaybe "Not Found"
+
+-- função para retornar um Int de uma Maybe String
+getMaybeInt :: Maybe String -> Int
+getMaybeInt maybe = read $ fromMaybe "0" maybe
+
+-- função para retornar um string com 1 caractere
+-- isso o Char aparecer como 'a' no output
+charToString :: Char -> String
+charToString c = [c]
+
+-- retorna a posição de um caractere tomando como base a lista ['a'..'z']
+charIndex :: String -> Int 
+charIndex c = ord (head c) - 97
 
 -- função para desenhar as bordas do menu
 printBorderTerminal:: IO ()
