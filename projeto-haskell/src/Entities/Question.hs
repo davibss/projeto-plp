@@ -5,6 +5,7 @@ module Entities.Question where
     data Question = Question {
         question_id:: String,
         formulation:: String,
+        difficulty:: Int,
         time:: Int,
         right_answer:: Maybe String,
         quiz_id:: String
@@ -13,5 +14,5 @@ module Entities.Question where
     getId :: Question -> String
     getId = question_id
     instance Show Question where
-        show (Question id formulation time rightAnswer quizId) =
+        show (Question id formulation difficulty time rightAnswer quizId) =
             show (NoQuotes formulation)

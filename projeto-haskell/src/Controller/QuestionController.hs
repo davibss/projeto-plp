@@ -14,18 +14,19 @@ instance FromRow Question where
                      <*> field
                      <*> field
                      <*> field
+                     <*> field
 instance FromRow Answer where
   fromRow = Answer <$> field
                    <*> field
                    <*> field
 
-addQuestion :: String -> Int -> String -> IO String
-addQuestion formulation duration quizId = do
+addQuestion :: String -> Int -> Int -> String -> IO String
+addQuestion formulation difficulty duration quizId = do
     conn <- open dbPath 
     uuidQuestion <- getRandomUUID
-    execute conn "INSERT INTO question (question_id,formulation,\
-        \time,quiz_id) VALUES (?,?,?,?)"
-        [uuidQuestion,formulation,show duration,quizId]
+    execute conn "INSERT INTO question (question_id,formulation,difficulty,\
+        \time,quiz_id) VALUES (?,?,?,?,?)"
+        [uuidQuestion,formulation,show difficulty,show duration,quizId]
     return uuidQuestion
 
 getAllQuestions :: String -> IO [Question]
@@ -49,9 +50,10 @@ updateQuestionRightAnswer question_id right_answer = do
 updateQuestion:: Question -> IO()
 updateQuestion question = do
       conn <- open dbPath
-      execute conn "UPDATE question SET formulation = ?, time = ?, right_answer = ?\
-        \ WHERE question_id = ?" (formulation question, time question:: Int,
-                                    right_answer question, getId question)
+      execute conn "UPDATE question SET formulation = ?, difficulty = ?, time = ?,\
+        \ right_answer = ? WHERE question_id = ?" (formulation question,
+            difficulty question:: Int, time question:: Int,
+            right_answer question, getId question)
 
 deleteQuestion :: String -> IO ()
 deleteQuestion question_id = do

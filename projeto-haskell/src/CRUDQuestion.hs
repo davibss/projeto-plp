@@ -34,9 +34,10 @@ menuQuestion :: Int -> String -> [Question] -> IO ()
 menuQuestion 1 quiz_id questions = do
     printBorderTerminal
     formulation <- getLineWithMessage "Enunciado> "
+    difficulty <- getLineWithMessage "Dificuldade> "
     duration <- getLineWithMessage "Duração(s)> "
     qtd <- getLineWithMessage "Quantidade de respostas> "
-    questionId <- addQuestion formulation (read duration) quiz_id -- cadastrando no bd
+    questionId <- addQuestion formulation (read difficulty) (read duration) quiz_id -- cadastrando no bd
     menuAddAnswer (read qtd) 0 questionId
     rightAnswer <- getLineWithMessage "Resposta correta> "
     updateQuestionRightAnswer questionId rightAnswer -- atualizando resposta
@@ -51,10 +52,11 @@ menuQuestion 2 quiz_id questions = do
     let question = questions!!(read resp-1)
     printBorderTerminal
     formulation <- getAlterLine "Novo enunciado> " (formulation question)
+    difficulty <- getAlterLine "Nova dificuldade> " (show $ difficulty question)
     duration <- getAlterLine "Nova duração> " (show $ time question)
     rightAnswer <- getAlterLine "Nova resposta correta> " (getMaybeString (right_answer question))
     updateQuestion $ Question (getId question) (getMaybeString formulation)
-        (getMaybeInt duration) rightAnswer quiz_id
+        (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id
     resp <- getLineWithMessage "Questão alterada! Pressione enter para voltar..."
     return ()
 

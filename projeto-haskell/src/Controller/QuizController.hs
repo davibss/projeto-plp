@@ -15,14 +15,14 @@ instance FromRow Quiz where
 instance ToRow Quiz  where
   toRow (Quiz id name topic user_id) = toRow (id, name, topic, user_id)
 
-addQuiz :: String -> String -> Int -> IO ()
+addQuiz :: String -> String -> String -> IO ()
 addQuiz nameQuiz topicQuiz userId = withConn dbPath $
   \conn -> do
       uuidQuiz <- getRandomUUID
       let quiz = Quiz uuidQuiz nameQuiz topicQuiz userId 
       execute conn "INSERT INTO quiz (quiz_id,name,topic,user_id) VALUES (?,?,?,?)" quiz
 
-getMyQuizzes :: Int -> IO [Quiz]
+getMyQuizzes :: String -> IO [Quiz]
 getMyQuizzes user_id = do
     conn <- open dbPath
     query conn "SELECT * from quiz WHERE user_id = ?" (Only user_id) :: IO [Quiz]

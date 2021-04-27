@@ -11,7 +11,7 @@ import CRUDQuestion
 import Data.Maybe (fromMaybe)
 
 -- menu para cadastrar quizzes
-menuQuiz:: Int -> Int -> IO()
+menuQuiz:: Int -> String -> IO()
 menuQuiz 1 user_id = do
     printBorderTerminal
     nameQuiz <- getLineWithMessage "Nome do Quiz> "
@@ -51,7 +51,7 @@ menuQuiz cod user_id = do
     mainQuiz user_id
 
 -- menu para editar o quiz
-menuSelectedQuiz:: Int -> Quiz -> IO()
+menuSelectedQuiz:: String -> Quiz -> IO()
 menuSelectedQuiz user_id quiz = do
     clearScreen
     putStrLn $ show quiz
@@ -88,7 +88,7 @@ printQuiz quizzes count = show count ++ ", "++
                             printQuiz (tail quizzes) (count+1)
 
 -- Função para executar o CRUD de quizes
-mainQuiz:: Int -> IO()
+mainQuiz:: String -> IO()
 mainQuiz user_id = do
     clearScreen
     printBorderTerminal

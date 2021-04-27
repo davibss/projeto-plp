@@ -8,6 +8,13 @@ import System.Console.Haskeline
 import Data.Maybe
 import qualified Control.Monad.Catch
 import Data.Char (ord)
+import Crypto.BCrypt
+import Data.ByteString.Char8 (unpack,pack)
+import qualified Data.ByteString as BL
+import qualified Data.String as BLU
+import Data.Time.Clock (diffUTCTime)
+import Data.Time.Clock
+import Data.Time
 
 -- caminho para a base de dados
 dbPath :: String
@@ -45,7 +52,7 @@ charToString :: Char -> String
 charToString c = [c]
 
 -- retorna a posição de um caractere tomando como base a lista ['a'..'z']
-charIndex :: String -> Int 
+charIndex :: String -> Int
 charIndex c = ord (head c) - 97
 
 -- função para desenhar as bordas do menu
@@ -55,3 +62,27 @@ printBorderTerminal = putStrLn $ concat (replicate 72 "-")
 -- função que implementa um getLine com permissão para alterar um conteúdo passado
 -- getAlterLine :: (MonadIO m, Control.Monad.Catch.MonadMask m) => String -> String -> m (Maybe String)
 getAlterLine attr value = runInputT defaultSettings $ getInputLineWithInitial attr (value, "")
+
+-- função para retornar um ByteString de uma string
+lazyByteString :: String -> BL.ByteString
+lazyByteString = BLU.fromString
+
+-- função para criar um hash a partir de uma string
+passwordHashString :: String -> IO String
+passwordHashString password = do
+    let p = Data.ByteString.Char8.pack
+    hash <- hashPasswordUsingPolicy fastBcryptHashingPolicy  (p password)
+    return $ unpack $ fromMaybe (lazyByteString "Not found") hash
+
+-- função que valida um hash e uma string qualquer
+passwordValidate :: String -> String -> Bool
+passwordValidate password hashedPassword =
+    validatePassword (pack hashedPassword) (pack password)
+
+-- calcula a pontuação total a partir de uma data inicial,
+-- data final, total de segundos e dificuldade
+totalScore :: UTCTime -> UTCTime -> Int -> Int -> Double
+totalScore startTime endTime totalSeconds difficulty = do
+    let difference = realToFrac (diffUTCTime endTime startTime)
+    let difficultyScore = fromIntegral $ 10 *(difficulty + 1)
+    difficultyScore * ((1 - difference/fromIntegral totalSeconds) + 1)
