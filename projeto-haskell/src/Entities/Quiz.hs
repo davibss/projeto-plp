@@ -9,6 +9,8 @@ module Entities.Quiz where
             user_id:: String
     }
 
+    getIdQuiz :: Quiz -> String
+    getIdQuiz = quiz_id
     getName :: Quiz -> String
     getName = name
     getTopic :: Quiz -> String

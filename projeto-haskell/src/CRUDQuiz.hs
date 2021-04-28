@@ -1,7 +1,7 @@
 module CRUDQuiz where
 import Controller.QuizController
     ( deleteQuiz, updateQuiz, getAllQuizzes, getMyQuizzes, addQuiz )
-import Entities.Quiz ( getTopic, getName, Quiz(Quiz, quiz_id) )
+import Entities.Quiz ( getTopic, getName, Quiz(Quiz, quiz_id, user_id) )
 import System.Console.ANSI ( clearScreen )
 import Data.Char ()
 import System.Exit ( exitSuccess )
@@ -9,6 +9,7 @@ import System.IO ()
 import Utils.Util ( getLineWithMessage, printBorderTerminal, getAlterLine )
 import CRUDQuestion
 import Data.Maybe (fromMaybe)
+import MainResolveQuiz (mainResolve)
 
 -- menu para cadastrar quizzes
 menuQuiz:: Int -> String -> IO()
@@ -44,6 +45,21 @@ menuQuiz 3 user_id = do
     printBorderTerminal
     resp <- getLineWithMessage "Pressione enter para voltar..."
     mainQuiz user_id
+
+menuQuiz 4 user_id = do
+    printBorderTerminal
+    quizzes <- getAllQuizzes
+    putStrLn $ printQuiz quizzes 1
+    printBorderTerminal
+    resp <- getLineWithMessage "Escolha um quiz pelo número> "
+    if read resp <= length quizzes && read resp > 0 then
+        mainResolve user_id (quizzes!!(read resp - 1))
+        >> getLineWithMessage "Enter para voltar ao menu principal..." >>
+        mainQuiz user_id
+    else do
+        getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+        mainQuiz user_id
+
 
 menuQuiz cod user_id = do
     printBorderTerminal
