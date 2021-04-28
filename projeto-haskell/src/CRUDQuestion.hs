@@ -121,15 +121,17 @@ menuAnswer respQuestion questions quiz_id = do
 
 printAnswer:: [Answer] -> Int -> String
 printAnswer [] count = ""
-printAnswer answers count = charToString (['a'..'z']!!count) ++ ") "++
-                            show (head answers) ++ "\n" ++
-                            printAnswer (tail answers) (count+1)
+printAnswer answers count = 
+    charToString (['a'..'z']!!count) ++ ") "++
+    show (head answers) ++ (if null $ tail answers then "" else "\n") ++
+    printAnswer (tail answers) (count+1)
 
 printQuestion:: [Question] -> Int -> String
 printQuestion [] count = ""
-printQuestion questions count = show count ++ ", "++
-                            show (head questions) ++ "\n" ++
-                            printQuestion (tail questions) (count+1)
+printQuestion questions count = 
+    show count ++ ", "++
+    show (head questions) ++ (if null $ tail questions then "" else "\n") ++
+    printQuestion (tail questions) (count+1)
 
 -- Função para executar o CRUD de questões
 mainQuestion:: String -> IO()

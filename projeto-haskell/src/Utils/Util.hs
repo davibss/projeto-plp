@@ -3,8 +3,12 @@ import System.IO
 import Data.UUID
 import Data.UUID.V4
 import Database.SQLite.Simple
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class ()
 import System.Console.Haskeline
+    ( defaultSettings,
+      getInputLineWithInitial,
+      getPassword,
+      runInputT )
 import Data.Maybe
 import qualified Control.Monad.Catch
 import Data.Char (ord)
@@ -12,9 +16,14 @@ import Crypto.BCrypt
 import Data.ByteString.Char8 (unpack,pack)
 import qualified Data.ByteString as BL
 import qualified Data.String as BLU
-import Data.Time.Clock (diffUTCTime)
 import Data.Time.Clock
 import Data.Time
+import Prelude hiding (catch)
+import System.Directory
+import Control.Exception
+import System.IO.Error hiding (catch)
+import Web.Browser (openBrowser)
+import Numeric
 
 -- caminho para a base de dados
 dbPath :: String
@@ -63,6 +72,15 @@ printBorderTerminal = putStrLn $ concat (replicate 72 "-")
 -- getAlterLine :: (MonadIO m, Control.Monad.Catch.MonadMask m) => String -> String -> m (Maybe String)
 getAlterLine attr value = runInputT defaultSettings $ getInputLineWithInitial attr (value, "")
 
+-- getline para senha com máscara '*'
+getPasswordInput :: String -> IO String
+getPasswordInput message = run where
+    run :: IO String
+    run = do
+        password <- runInputT defaultSettings $ do
+            getPassword (Just '*') message
+        return $ fromMaybe "Not found" password
+
 -- função para retornar um ByteString de uma string
 lazyByteString :: String -> BL.ByteString
 lazyByteString = BLU.fromString
@@ -81,11 +99,36 @@ passwordValidate password hashedPassword =
 
 -- calcula a pontuação total a partir de uma data inicial,
 -- data final, total de segundos e dificuldade
-totalScore :: UTCTime -> UTCTime -> Int -> Int -> Double
-totalScore startTime endTime totalSeconds difficulty = do
+calculateScore :: UTCTime -> UTCTime -> Int -> Int -> Double
+calculateScore startTime endTime totalSeconds difficulty = do
     let difference = realToFrac (diffUTCTime endTime startTime)
     let difficultyScore = fromIntegral $ 10 * (difficulty + 1)
     let division = difference/fromIntegral totalSeconds
     if division <= 1 then
         difficultyScore * ((1 - division) + 1)
     else 0
+
+openFormulaInBrowser :: String -> IO ()
+openFormulaInBrowser formula = do
+    file <- getCurrentDirectory
+    let filePath = file++"/src/HTMLIO/formulaQuestao.html"
+    handle <- openFile (file++"/src/HTMLIO/inputHtml.txt") ReadMode
+    contents <- hGetContents handle
+    let firstHtml = contents
+    let secondHtml = "</p></body></html>"
+    let result = firstHtml++formula++secondHtml
+    writeFile filePath result
+    let urlOutput = "file:///"++file++"/src/HTMLIO/formulaQuestao.html"
+    result <- openBrowser urlOutput
+    hClose handle
+    return ()
+
+removeIfExists :: FilePath -> IO ()
+removeIfExists fileName = removeFile fileName `catch` handleExists
+  where handleExists e
+          | isDoesNotExistError e = return ()
+          | otherwise = Control.Exception.throwIO e
+
+
+formatFloatN :: RealFloat a => a -> Int -> String
+formatFloatN floatNum numOfDecimals = showFFloat (Just numOfDecimals) floatNum ""
