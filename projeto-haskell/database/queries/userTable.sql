@@ -4,3 +4,5 @@ CREATE TABLE IF NOT EXISTS user (
     email TEXT NOT NULL,
     password TEXT NOT NULL
 );
+
+CREATE UNIQUE INDEX user_email_index ON user(email);

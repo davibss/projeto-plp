@@ -84,5 +84,8 @@ passwordValidate password hashedPassword =
 totalScore :: UTCTime -> UTCTime -> Int -> Int -> Double
 totalScore startTime endTime totalSeconds difficulty = do
     let difference = realToFrac (diffUTCTime endTime startTime)
-    let difficultyScore = fromIntegral $ 10 *(difficulty + 1)
-    difficultyScore * ((1 - difference/fromIntegral totalSeconds) + 1)
+    let difficultyScore = fromIntegral $ 10 * (difficulty + 1)
+    let division = difference/fromIntegral totalSeconds
+    if division <= 1 then
+        difficultyScore * ((1 - division) + 1)
+    else 0

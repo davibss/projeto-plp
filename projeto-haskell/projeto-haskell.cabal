@@ -23,9 +23,11 @@ executable projeto-haskell
                        Entities.Question
                        Entities.Answer
                        Entities.UserAnswer
+                       Entities.User
                        Controller.QuizController
                        Controller.QuestionController
                        Controller.UserAnswerController
+                       Controller.UserController
                        CRUDQuiz
                        CRUDQuestion
                        Utils.Util
