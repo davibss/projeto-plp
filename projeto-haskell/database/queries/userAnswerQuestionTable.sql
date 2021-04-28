@@ -6,10 +6,10 @@
     coluna timeSpent em userAnswer, para indicar o tempo total gasto
  */
 CREATE TABLE IF NOT EXISTS user_answer_question (
-    user_answer_id INTEGER NOT NULL,
-    question_id INTEGER NOT NULL,
+    user_answer_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
     timeSpent INTEGER NOT NULL,
-    markedAnswer INTEGER NOT NULL,
-    FOREIGN KEY (user_answer_id) REFERENCES user_answer (id),
-    FOREIGN KEY (question_id) REFERENCES question (id)
+    markedAnswer TEXT NOT NULL,
+    FOREIGN KEY (user_answer_id) REFERENCES user_answer (user_answer_id),
+    FOREIGN KEY (question_id) REFERENCES question (question_id)
 );

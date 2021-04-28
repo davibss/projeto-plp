@@ -6,7 +6,7 @@ module Entities.Quiz where
             quiz_id:: String,
             name:: String,
             topic:: String,
-            user_id:: Int
+            user_id:: String
     }
 
     getName :: Quiz -> String

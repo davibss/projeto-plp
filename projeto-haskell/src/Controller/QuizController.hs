@@ -5,22 +5,7 @@ import Entities.Quiz
 import Database.SQLite.Simple
 import Database.SQLite.Simple.FromRow
 import Database.SQLite.Simple.ToField
-import Data.UUID
-import Data.UUID.V4
-
-getRandomUUID :: IO String
-getRandomUUID = nextRandom >>= (return . toString)
-
--- Caminho para database
-dbPath :: String
-dbPath = "database/quiz-database.db"
-
-withConn :: String -> (Connection -> IO ()) -> IO ()
-withConn dbName action = do
-   conn <- open dbName
-   action conn
-   close conn
-
+import Utils.Util
 instance FromRow Quiz where
   fromRow = Quiz <$> field
                  <*> field
@@ -30,14 +15,14 @@ instance FromRow Quiz where
 instance ToRow Quiz  where
   toRow (Quiz id name topic user_id) = toRow (id, name, topic, user_id)
 
-addQuiz :: String -> String -> Int -> IO ()
+addQuiz :: String -> String -> String -> IO ()
 addQuiz nameQuiz topicQuiz userId = withConn dbPath $
   \conn -> do
       uuidQuiz <- getRandomUUID
       let quiz = Quiz uuidQuiz nameQuiz topicQuiz userId 
       execute conn "INSERT INTO quiz (quiz_id,name,topic,user_id) VALUES (?,?,?,?)" quiz
 
-getMyQuizzes :: Int -> IO [Quiz]
+getMyQuizzes :: String -> IO [Quiz]
 getMyQuizzes user_id = do
     conn <- open dbPath
     query conn "SELECT * from quiz WHERE user_id = ?" (Only user_id) :: IO [Quiz]
@@ -55,5 +40,6 @@ updateQuiz quiz = do
 
 deleteQuiz :: String -> IO()
 deleteQuiz quizId = do
-      conn <- open dbPath
-      execute conn "DELETE FROM quiz WHERE quiz_id = ?" (Only quizId)
+    conn <- open dbPath
+    execute_ conn "PRAGMA foreign_keys = ON"
+    execute conn "DELETE FROM quiz WHERE quiz_id = ?" (Only quizId)
