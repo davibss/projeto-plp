@@ -11,16 +11,18 @@ instance FromRow Quiz where
                  <*> field
                  <*> field
                  <*> field
+                 <*> field
 
 instance ToRow Quiz  where
-  toRow (Quiz id name topic user_id) = toRow (id, name, topic, user_id)
+  toRow (Quiz id name topic user_id created_at) = toRow (id, name, topic, user_id)
 
 addQuiz :: String -> String -> String -> IO ()
 addQuiz nameQuiz topicQuiz userId = withConn dbPath $
   \conn -> do
       uuidQuiz <- getRandomUUID
-      let quiz = Quiz uuidQuiz nameQuiz topicQuiz userId 
-      execute conn "INSERT INTO quiz (quiz_id,name,topic,user_id) VALUES (?,?,?,?)" quiz
+      let quiz = Quiz uuidQuiz nameQuiz topicQuiz userId ""
+      execute conn "INSERT INTO quiz (quiz_id,name,topic,user_id,created_at)\
+        \ VALUES (?,?,?,?,datetime('now','localtime'))" quiz
 
 getMyQuizzes :: String -> IO [Quiz]
 getMyQuizzes user_id = do
@@ -35,13 +37,20 @@ getAllQuizzes = do
 getAllQuizzesWithQuestions :: IO [Quiz]
 getAllQuizzesWithQuestions = do
     conn <- open dbPath
-    query_ conn "SELECT DISTINCT qz.quiz_id, qz.name, qz.topic, qz.user_id \
-    \FROM quiz qz, question qe WHERE qz.quiz_id = qe.quiz_id" :: IO [Quiz]
+    query_ conn "SELECT DISTINCT qz.quiz_id, qz.name, qz.topic, qz.user_id,qz.created_at\
+    \ FROM quiz qz, question qe WHERE qz.quiz_id = qe.quiz_id" :: IO [Quiz]
+
+getAllQuizzesWithAnswers :: String -> IO [Quiz]
+getAllQuizzesWithAnswers user_id = do
+    conn <- open dbPath
+    query conn "SELECT DISTINCT qz.quiz_id, qz.name, qz.topic, qz.user_id,qz.created_at\
+      \ FROM quiz qz, user_answer ua WHERE qz.quiz_id = ua.quiz_id\
+      \ AND ua.user_id=?" (Only user_id) :: IO [Quiz]
 
 updateQuiz:: Quiz -> IO()
 updateQuiz quiz = do
       conn <- open dbPath
-      execute conn "UPDATE quiz SET name = ?, topic = ? WHERE quiz_id = ?" 
+      execute conn "UPDATE quiz SET name = ?, topic = ? WHERE quiz_id = ?"
         (getName quiz :: String,getTopic quiz, quiz_id quiz :: String)
 
 deleteQuiz :: String -> IO()

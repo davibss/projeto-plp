@@ -8,3 +8,5 @@ CREATE TABLE IF NOT EXISTS user_answer (
     FOREIGN KEY (user_id) REFERENCES user (user_id),
     FOREIGN KEY (quiz_id) REFERENCES quiz (quiz_id)
 );
+
+ALTER TABLE user_answer ADD COLUMN created_at TEXT;

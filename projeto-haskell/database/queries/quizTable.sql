@@ -5,3 +5,5 @@ CREATE TABLE IF NOT EXISTS quiz (
     user_id TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
+ALTER TABLE quiz ADD COLUMN created_at TEXT;

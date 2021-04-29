@@ -66,7 +66,7 @@ charIndex c = ord (head c) - 97
 
 -- função para desenhar as bordas do menu
 printBorderTerminal:: IO ()
-printBorderTerminal = putStrLn $ concat (replicate 72 "-")
+printBorderTerminal = putStrLn $ concat (replicate 80 "-")
 
 -- função que implementa um getLine com permissão para alterar um conteúdo passado
 -- getAlterLine :: (MonadIO m, Control.Monad.Catch.MonadMask m) => String -> String -> m (Maybe String)
@@ -108,6 +108,7 @@ calculateScore startTime endTime totalSeconds difficulty = do
         difficultyScore * ((1 - division) + 1)
     else 0
 
+-- função responsável por abrir uma questão no browser
 openFormulaInBrowser :: String -> IO ()
 openFormulaInBrowser formula = do
     file <- getCurrentDirectory
@@ -124,12 +125,23 @@ openFormulaInBrowser formula = do
     hFlush stdout
     return ()
 
+{--
+    função para remover um arquivo se ele existir
+    esta função é necessária para limpar o arquivo de saída gerado 
+    pela função openFormulaInBrowser
+--}
 removeIfExists :: FilePath -> IO ()
 removeIfExists fileName = removeFile fileName `catch` handleExists
   where handleExists e
           | isDoesNotExistError e = return ()
           | otherwise = Control.Exception.throwIO e
 
-
+-- formata um número double ou float para String com n casas decimais
 formatFloatN :: RealFloat a => a -> Int -> String
 formatFloatN floatNum numOfDecimals = showFFloat (Just numOfDecimals) floatNum ""
+
+-- converte uma string para UTCTime
+dateStringToUTCTime:: String -> UTCTime
+dateStringToUTCTime dateString = parseTimeOrError True defaultTimeLocale 
+    "%Y-%m-%d %H:%M:%S" dateString :: UTCTime
+
