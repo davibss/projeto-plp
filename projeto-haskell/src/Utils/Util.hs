@@ -121,6 +121,7 @@ openFormulaInBrowser formula = do
     let urlOutput = "file:///"++file++"/src/HTMLIO/formulaQuestao.html"
     result <- openBrowser urlOutput
     hClose handle
+    hFlush stdout
     return ()
 
 removeIfExists :: FilePath -> IO ()

@@ -33,6 +33,14 @@ data QuizResponse = QuizResponse {
     questionsResponse :: [QuestionResponse]
 }
 
+makeHtmlTable:: [Answer] -> String
+makeHtmlTable [answers] = ""
+makeHtmlTable answers =
+    "<p>Alternativas:</p>"++
+    "<table style=\"text-align: left;\">"++
+    printAnswerHtml answers 0++
+    "</table>"
+
 printAnswer:: [Answer] -> Int -> String
 printAnswer [] count = ""
 printAnswer answers count =
@@ -40,15 +48,26 @@ printAnswer answers count =
     show (head answers) ++ (if null $ tail answers then "" else "\n") ++
     printAnswer (tail answers) (count+1)
 
+printAnswerHtml:: [Answer] -> Int -> String
+printAnswerHtml [] count = ""
+printAnswerHtml answers count =
+    "<tr>"++
+    "<td>"++charToString (['a'..'z']!!count)++") "++"</td>"++
+    "<td>"++show (head answers)++"</td>"++
+    "</tr>"++
+    printAnswerHtml (tail answers) (count+1)
+
 resolveQuestion:: [Question] -> Int -> IO [QuestionResponse]
 resolveQuestion [] index = return []
 resolveQuestion questions index = do
     clearScreen
     putStrLn $ "Questão "++show (index+1)
+    answers <- getAllAnswers (getId (head questions))
     printBorderTerminal
     openB <- getLineWithMessage "A visualização é melhor no navegador,\
         \ abrir? [S/N]> "
-    when (map toLower openB == "s") $ openFormulaInBrowser (formulation (head questions))
+    when (map toLower openB == "s") $
+        openFormulaInBrowser (formulation (head questions)++makeHtmlTable answers)
         >> putStrLn "Página no navegador aberta..."
     printBorderTerminal
     putStrLn $ "Você tem "++show (time (head questions))++"s para resolver está questão!!"
@@ -56,13 +75,11 @@ resolveQuestion questions index = do
     putStrLn $ "Questão "++show (index+1)++"> "++ formulation (head questions)
     printBorderTerminal
     start <- getCurrentTime -- start time here
-    answers <- getAllAnswers (getId (head questions))
     putStrLn $ printAnswer answers 0
     answer <- getLineWithMessage "Sua resposta> "
     end <- getCurrentTime -- end time here
     removeIfExists "src/HTMLIO/formulaQuestao.html"
     nextQuestion <- resolveQuestion (tail questions) (index+1)
-    -- cadastrar corretamente o tempo e o score real
     let score = if answer == getMaybeString (right_answer (head questions)) then
             calculateScore start end (time (head questions))
             (difficulty (head questions)) else 0

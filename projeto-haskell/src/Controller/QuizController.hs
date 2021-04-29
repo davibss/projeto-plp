@@ -32,6 +32,12 @@ getAllQuizzes = do
     conn <- open dbPath
     query_ conn "SELECT * from quiz" :: IO [Quiz]
 
+getAllQuizzesWithQuestions :: IO [Quiz]
+getAllQuizzesWithQuestions = do
+    conn <- open dbPath
+    query_ conn "SELECT DISTINCT qz.quiz_id, qz.name, qz.topic, qz.user_id \
+    \FROM quiz qz, question qe WHERE qz.quiz_id = qe.quiz_id" :: IO [Quiz]
+
 updateQuiz:: Quiz -> IO()
 updateQuiz quiz = do
       conn <- open dbPath

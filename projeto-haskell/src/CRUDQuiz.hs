@@ -1,6 +1,6 @@
 module CRUDQuiz where
 import Controller.QuizController
-    ( deleteQuiz, updateQuiz, getAllQuizzes, getMyQuizzes, addQuiz )
+    ( deleteQuiz, updateQuiz, getAllQuizzes, getMyQuizzes, addQuiz, getAllQuizzesWithQuestions )
 import Entities.Quiz ( getTopic, getName, Quiz(Quiz, quiz_id, user_id) )
 import System.Console.ANSI ( clearScreen )
 import Data.Char ()
@@ -48,7 +48,7 @@ menuQuiz 3 user_id = do
 
 menuQuiz 4 user_id = do
     printBorderTerminal
-    quizzes <- getAllQuizzes
+    quizzes <- getAllQuizzesWithQuestions
     putStrLn $ printQuiz quizzes 1
     printBorderTerminal
     resp <- getLineWithMessage "Escolha um quiz pelo número> "

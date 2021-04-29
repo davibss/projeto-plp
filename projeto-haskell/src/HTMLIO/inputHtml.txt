@@ -8,6 +8,18 @@
   <script id="MathJax-script" async
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
+  <style>
+  	.MathJax_Display, /* MathJax 2 */
+    mjx-container     /* MathJax 3 */
+    { text-align: left!important; }
+    p {
+      font-size: 40px; 
+      word-break: break-all;
+    }
+    table {
+      font-size: 32px;
+    }
+  </style>
 </head>
 <body>
-<p style="font-size: 40px; word-break: break-all;">
+<p>
