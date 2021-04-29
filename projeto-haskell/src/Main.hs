@@ -7,20 +7,24 @@ import Controller.UserController
 
 
 -- Função de cadastro
-cadastrar :: String -> String -> String -> IO()
-cadastrar name email password = do
+cadastrar :: IO()
+cadastrar = do
     clearScreen
-    name <- getLine
-    email <- getLine
-    password <- getLine
+    printBorderTerminal
+    name <- getLineWithMessage "Crie o nome do usuário: "
+    email <- getLineWithMessage "Crie o email do usuário: "
+    password <- getPasswordInput "Crie a senha do usuário: "
     addUser name email password
 
-logar :: String -> String -> IO()
-logar email password = do
+
+{-logar :: IO()
+logar = do
     clearScreen
-    email <- getLine
-    password <- getLine
-    return ()
+    printBorderTerminal
+    email <- getLineWithMessage "Digite o email do usuário: "
+    passwordUser <- getPasswordInput "Digite a senha do usuário: "
+    user <- getUserByEmail email
+    let logado = passwordValidate passwordUser password (head user) -}
     
     
     
