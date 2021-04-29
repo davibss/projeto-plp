@@ -5,26 +5,24 @@ import System.IO
 import Utils.Util
 import Controller.UserController
 
-
 -- Função de cadastro
-Cadastrar :: String -> String -> String -> IO()
-Cadastrar name email password = do
+cadastrar :: IO()
+cadastrar = do
     clearScreen
-    name <- getLine
-    email <- getLine
-    password <- getLine
-    addUser name email password
+    printBorderTerminal
+    name <- getLineWithMessage "Crie o nome do usuário: "
+    email <- getLineWithMessage "Crie o email do usuário: "
+    password <- getPasswordInput "Crie a senha do usuário: "
+    addUser name email password 
 
-Logar :: String -> String -> IO()
-Logar email password = do
+
+{-logar :: IO()
+logar = do
     clearScreen
-    email <- getLine
-    password <- getLine
-    
-    
-    
-
-
+    printBorderTerminal
+    email <- getLineWithMessage "Digite o email do usuário: "
+    password <- getPasswordInput "Digite a senha do usuário: "
+    getUserByEmail email -}
 
 
 -- Função principal para executar o sistema
@@ -36,3 +34,11 @@ main = do
                     "2adee2d7-b1a9-4568-afa6-bcb248588962"]
     userId <- getLineWithMessage "Código do usuário> "
     mainQuiz $ uuidLists!!read userId
+
+
+    
+    
+
+
+
+
