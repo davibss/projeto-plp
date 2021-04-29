@@ -7,19 +7,20 @@ import Controller.UserController
 
 
 -- Função de cadastro
-Cadastrar :: String -> String -> String -> IO()
-Cadastrar name email password = do
+cadastrar :: String -> String -> String -> IO()
+cadastrar name email password = do
     clearScreen
     name <- getLine
     email <- getLine
     password <- getLine
     addUser name email password
 
-Logar :: String -> String -> IO()
-Logar email password = do
+logar :: String -> String -> IO()
+logar email password = do
     clearScreen
     email <- getLine
     password <- getLine
+    return ()
     
     
     
