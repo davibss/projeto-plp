@@ -4,6 +4,7 @@ import System.Console.ANSI
 import System.IO
 import Utils.Util
 import Controller.UserController
+import Entities.User
 
 
 -- Função de cadastro
@@ -17,19 +18,21 @@ cadastrar = do
     addUser name email password
 
 
-{-logar :: IO()
+logar :: IO()
 logar = do
     clearScreen
     printBorderTerminal
     email <- getLineWithMessage "Digite o email do usuário: "
-    passwordUser <- getPasswordInput "Digite a senha do usuário: "
+    
     user <- getUserByEmail email
-    let logado = passwordValidate passwordUser password (head user) -}
-    
-    
-    
+    if null user then logar else do
+        passwordUser <- getPasswordInput "Digite a senha do usuário: "
+        let logado = passwordValidate passwordUser (password(head user))
+        if logado then mainQuiz (getId  (head user)) else do
+            print "Senha errada, tente novamente!"
+            logar
 
-
+    return ()    
 
 
 -- Função principal para executar o sistema
