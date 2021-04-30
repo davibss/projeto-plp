@@ -82,6 +82,15 @@ menuQuiz 5 user_id = do
         getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
         mainQuiz user_id
 
+menuQuiz 6 user_id = do
+    printBorderTerminal
+    user <- getUserById user_id
+    nome <- getAlterLine "Nome> " (name (head user))
+    email <- getAlterLine "Email> " (email (head user))
+    updateUser $ User user_id (getMaybeString nome) (getMaybeString email) ""
+    getLineWithMessage "Pressione Enter para voltar ao menu principal..."
+    mainQuiz user_id
+
 menuQuiz cod user_id = do
     printBorderTerminal
     resp <- getLineWithMessage "Opção de menu não encontrada. Pressione enter para voltar..."
@@ -140,6 +149,7 @@ mainQuiz user_id = do
     putStrLn "3 - Listar Quizzes"
     putStrLn "4 - Resolver Quizzes"
     putStrLn "5 - Quizzes Respondidos"
+    putStrLn "6 - Alterar Usuário"
     putStrLn "99 - Sair"
     printBorderTerminal
     resp <- getLineWithMessage "Opção> "
