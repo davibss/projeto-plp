@@ -21,6 +21,11 @@ addUser name email password = do
         \password) VALUES (?,?,?,?)"
         [uuidUser,name,email,passwordHash]
 
+getUserById :: String -> IO [User]
+getUserById user_id = do
+    conn <- open dbPath
+    query conn "SELECT * FROM user WHERE user_id = ?"  (Only user_id) :: IO [User]        
+
 -- função que retorna lista de usuários com email igual ao passado
 getUserByEmail :: String -> IO [User]
 getUserByEmail email = do

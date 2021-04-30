@@ -7,12 +7,14 @@ import System.Console.ANSI ( clearScreen )
 import Data.Char ()
 import System.Exit ( exitSuccess )
 import System.IO ()
-import Utils.Util ( getLineWithMessage, printBorderTerminal, getAlterLine )
+import Utils.Util ( getLineWithMessage, printBorderTerminal, getAlterLine, getMaybeString )
 import CRUDQuestion
 import Data.Maybe (fromMaybe)
 import MainResolveQuiz (mainResolve)
 import Controller.UserAnswerController (getAllAnswersQuizFromUser,
     getAllAnswersFromUser, UserAnswerForQuiz)
+import Controller.UserController
+import Entities.User
 
 -- menu para cadastrar quizzes
 menuQuiz:: Int -> String -> IO()
