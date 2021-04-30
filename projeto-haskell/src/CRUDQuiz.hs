@@ -17,8 +17,9 @@ import Controller.UserAnswerController (getAllAnswersQuizFromUser,
 import Controller.UserController
 import Entities.User
 import Entities.Question
-import Controller.QuestionController ( getAllQuestions, addQuestion )
+import Controller.QuestionController ( getAllQuestions, addQuestion, getAllAnswers, addAnswer, updateQuestionRightAnswer )
 import Control.Monad (when)
+import Entities.Answer
 
 -- menu para cadastrar quizzes
 menuQuiz:: Int -> String -> IO()
@@ -69,20 +70,25 @@ menuQuiz 3 user_id = do
 menuQuiz 4 user_id = do
     printBorderTerminal
     quizzes <- getAllQuizzesAnswers user_id
-    putStrLn $ printWithIndex quizzes 1
-    printBorderTerminal
-    resp <- getLineWithMessage "Escolha um quiz pelo número> "
-    printBorderTerminal
-    putStrLn "Respostas:"
-    if read resp <= length quizzes && read resp > 0 then do
-        allAnswersFromQuiz <- getAllAnswersQuizFromUser user_id
-            (getQuizAnswerId (quizzes!!(read resp-1))) (userAnswerId (quizzes!!(read resp-1)))
-        putStrLn $ printWithIndex allAnswersFromQuiz 1
-        getLineWithMessage "Pressione Enter para voltar ao menu principal..."
+    if length quizzes == 0 then do
+        getLineWithMessage "Você ainda não respondeu nenhum quiz. \
+        \Pressione enter para voltar..."
         return ()
     else do
-        getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
-        return ()
+        putStrLn $ printWithIndex quizzes 1
+        printBorderTerminal
+        resp <- getLineWithMessage "Escolha um quiz pelo número> "
+        printBorderTerminal
+        putStrLn "Respostas:"
+        if read resp <= length quizzes && read resp > 0 then do
+            allAnswersFromQuiz <- getAllAnswersQuizFromUser user_id
+                (getQuizAnswerId (quizzes!!(read resp-1))) (userAnswerId (quizzes!!(read resp-1)))
+            putStrLn $ printWithIndex allAnswersFromQuiz 1
+            getLineWithMessage "Pressione Enter para voltar ao menu principal..."
+            return ()
+        else do
+            getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+            return ()
 
 -- menu de alteracao de usuario
 menuQuiz 5 user_id = do
@@ -131,9 +137,19 @@ creatingQuestions:: String -> [Question] -> IO()
 creatingQuestions quiz_id [] = return ()
 creatingQuestions quiz_id questions = do
     let question = head questions
-    addQuestion (formulation question) (difficulty question) (time question)
+    uuid <- addQuestion (formulation question) (difficulty question) (time question)
         (type_question question) quiz_id
+    updateQuestionRightAnswer (getIdQuestion question) (getMaybeString (right_answer question))
+    answers <- getAllAnswers (getIdQuestion question)
+    creatingAnswers uuid answers
     creatingQuestions quiz_id (tail questions)
+
+creatingAnswers:: String -> [Answer] -> IO()
+creatingAnswers question_id [] = return ()
+creatingAnswers question_id answers = do
+    let answer = head answers
+    addAnswer (text answer) question_id
+    creatingAnswers question_id (tail answers)
 
 concatenateQuestions:: [Quiz] -> IO [Question]
 concatenateQuestions [] = return []
@@ -170,8 +186,10 @@ menuSelectedQuiz user_id quiz = do
             let nameEdited = fromMaybe "Not Found" name
             let topicEdited = fromMaybe "Not Found" topic
             updateQuiz $ Quiz (getIdQuiz quiz) nameEdited topicEdited user_id ""
-            putStrLn $ if nameEdited == getName quiz &&
-                topicEdited == getTopic quiz then "Nada a alterar..." else "Quiz alterado!"
+            getLineWithMessage $ (if nameEdited == getName quiz &&
+                topicEdited == getTopic quiz then "Nada a alterar." else "Quiz alterado!")
+                ++ " Pressione Enter para voltar..."
+            return ()
         else if read resp == 0 then do
             deleteQuiz $ getIdQuiz quiz
             putStrLn "Quiz deletado com sucesso!"

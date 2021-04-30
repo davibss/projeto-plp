@@ -55,7 +55,7 @@ updateQuestion question = do
       execute conn "UPDATE question SET formulation = ?, difficulty = ?, time = ?,\
         \ right_answer = ? WHERE question_id = ?" (formulation question,
             difficulty question:: Int, time question:: Int,
-            right_answer question, getId question)
+            right_answer question, getIdQuestion question)
 
 deleteQuestion :: String -> IO ()
 deleteQuestion question_id = do

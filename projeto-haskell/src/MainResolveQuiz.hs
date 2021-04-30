@@ -14,6 +14,8 @@ import Entities.Answer
 import Controller.UserAnswerController (addUserAnswer, addUserAnswerQuestion)
 import Data.Time (getCurrentTime)
 import Data.Time.Clock (diffUTCTime)
+import System.IO
+-- import GHC.IO.Handle
 
 data QuestionResponse = QuestionResponse {
     id_question :: String,
@@ -69,7 +71,7 @@ resolveQuestion [] index = return []
 resolveQuestion questions index = do
     clearScreen
     putStrLn $ "Questão "++show (index+1)
-    answers <- getAllAnswers (getId (head questions))
+    answers <- getAllAnswers (getIdQuestion (head questions))
     printBorderTerminal
     openB <- getLineWithMessage "A visualização é melhor no navegador,\
         \ abrir? [S/N]> "
@@ -85,6 +87,7 @@ resolveQuestion questions index = do
     start <- getCurrentTime -- start time here
     putStrLn $ printAnswer answers 0
     answer <- getLineWithMessage "Sua resposta> "
+    hFlush stdout
     end <- getCurrentTime -- end time here
     removeIfExists "src/HTMLIO/formulaQuestao.html"
     nextQuestion <- resolveQuestion (tail questions) (index+1)
@@ -93,7 +96,7 @@ resolveQuestion questions index = do
             calculateScore start end (time (head questions))
             (difficulty (head questions)) else 0
     let difference = diffUTCTime end start
-    return (QuestionResponse (getId (head questions)) score
+    return (QuestionResponse (getIdQuestion (head questions)) score
         (floor difference) answer:nextQuestion)
 
 startQuiz:: [Question] -> IO QuizResponse

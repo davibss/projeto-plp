@@ -12,8 +12,8 @@ module Entities.Question where
         type_question:: Int
     }
 
-    getId :: Question -> String
-    getId = question_id
+    getIdQuestion :: Question -> String
+    getIdQuestion = question_id
     instance Show Question where
         show (Question id formulation difficulty time rightAnswer type_question quizId) =
             show (NoQuotes formulation)

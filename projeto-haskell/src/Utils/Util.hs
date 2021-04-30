@@ -126,9 +126,9 @@ openFormulaInBrowser formula = do
     let secondHtml = "</p></body></html>"
     let result = firstHtml++formula++secondHtml
     writeFile filePath result
+    hClose handle
     let urlOutput = "file:///"++file++"/src/HTMLIO/formulaQuestao.html"
     result <- openBrowser urlOutput
-    hClose handle
     hFlush stdout
     return ()
 
@@ -158,19 +158,6 @@ lowerString = map toLower
 
 removeAllSpaces:: String -> String
 removeAllSpaces = filter (/= ' ')
-
-
-myPureFunction :: Float -> Float
-myPureFunction x = 2 * x
-newRand = randomIO :: IO Int
-
--- shuffleList :: [b] -> IO [b]
--- shuffleList list = do
---     let permuts = permutations list
---     let sizeList = fromInteger (toInteger (length permuts))
---     num <- randomIO :: IO Float
---     let index = (num * (sizeList - 0) + 0)
---     return (permuts!!(truncate index))
 
 shuffleList :: [a] -> IO [a]
 shuffleList [] = return []

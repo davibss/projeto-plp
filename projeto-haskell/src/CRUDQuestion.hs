@@ -41,9 +41,10 @@ getNumberAnswers typeQuestion = do
 menuQuestion :: Int -> String -> [Question] -> IO ()
 -- opção de menu para cadastro de questões
 menuQuestion 1 quiz_id questions = do
+    clearScreen
     printBorderTerminal
     formulation <- getLineWithMessage "Enunciado> "
-    difficulty <- getLineWithMessage "Dificuldade> "
+    difficulty <- getLineWithMessage "Dificuldade [0-Fácil,1-Média,2-Difícil]> "
     duration <- getLineWithMessage "Duração(s)> "
     typeQuestion <- getLineWithMessage
         "Tipo de questão ([0]-Alternativa única, [1]-V/F, [2]-Múltipla escolha)> "
@@ -61,7 +62,11 @@ menuQuestion 1 quiz_id questions = do
 
 -- opção de menu para alterar questão
 menuQuestion 2 quiz_id questions = do
+    clearScreen
     putStrLn "Alterar questão"
+    printBorderTerminal
+    putStrLn $ printQuestion questions 1
+    printBorderTerminal
     resp <- getLineWithMessage "Número da questão> "
     let question = questions!!(read resp-1)
     printBorderTerminal
@@ -69,7 +74,7 @@ menuQuestion 2 quiz_id questions = do
     difficulty <- getAlterLine "Nova dificuldade> " (show $ difficulty question)
     duration <- getAlterLine "Nova duração> " (show $ time question)
     rightAnswer <- getAlterLine "Nova resposta correta> " (getMaybeString (right_answer question))
-    updateQuestion $ Question (getId question) (getMaybeString formulation)
+    updateQuestion $ Question (getIdQuestion question) (getMaybeString formulation)
         (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id 0
     resp <- getLineWithMessage "Questão alterada! Pressione enter para voltar..."
     return ()
@@ -88,8 +93,10 @@ menuQuestion 3 quiz_id questions = do
 menuQuestion 4 quiz_id questions = do
     putStrLn "Deletar questão"
     printBorderTerminal
+    putStrLn $ printQuestion questions 1
+    printBorderTerminal
     resp <- getLineWithMessage "Número da questão> "
-    deleteQuestion (getId (questions!!(read resp - 1)))
+    deleteQuestion (getIdQuestion (questions!!(read resp - 1)))
     resp <- getLineWithMessage "Questão deletada! Pressione enter para voltar..."
     return ()
 
@@ -98,9 +105,10 @@ menuQuestion cod quiz_id questions = putStrLn "Esta opção de menu não existe!
 
 menuAnswer :: String -> [Question] -> String -> IO ()
 menuAnswer respQuestion questions quiz_id = do
+    clearScreen
     putStrLn "Respostas da questão"
     printBorderTerminal
-    answers <- getAllAnswers (getId (questions!!(read respQuestion -1)))
+    answers <- getAllAnswers (getIdQuestion (questions!!(read respQuestion -1)))
     putStrLn $ "Resposta correta: "++getMaybeString
         (right_answer (questions!!(read respQuestion - 1)))++")"
     putStrLn "Repostas: "
@@ -112,7 +120,7 @@ menuAnswer respQuestion questions quiz_id = do
     putStrLn "Enter - Voltar para o menu"
     printBorderTerminal
     resp <- getLineWithMessage "Opção> "
-    let questionId = getId (questions!!(read respQuestion -1))
+    let questionId = getIdQuestion (questions!!(read respQuestion -1))
     if resp == "1" then do
         menuAddAnswer (length answers + 1) (length answers) questionId
         putStr "Resposta adicionada! "
