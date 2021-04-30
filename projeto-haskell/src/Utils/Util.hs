@@ -11,7 +11,7 @@ import System.Console.Haskeline
       runInputT )
 import Data.Maybe
 import qualified Control.Monad.Catch
-import Data.Char (ord)
+import Data.Char (ord, toLower)
 import Crypto.BCrypt
 import Data.ByteString.Char8 (unpack,pack)
 import qualified Data.ByteString as BL
@@ -145,3 +145,6 @@ dateStringToUTCTime:: String -> UTCTime
 dateStringToUTCTime dateString = parseTimeOrError True defaultTimeLocale 
     "%Y-%m-%d %H:%M:%S" dateString :: UTCTime
 
+-- converte String para minusculas
+lowerString:: String -> String
+lowerString = map toLower
