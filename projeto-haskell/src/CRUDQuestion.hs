@@ -6,6 +6,7 @@ import Controller.QuestionController (addQuestion, addAnswer, updateQuestionRigh
 import Entities.Question
 import Data.Maybe (fromMaybe)
 import Entities.Answer
+import Control.Monad (when)
 
 menuAddAnswer:: Int -> Int -> String -> IO()
 menuAddAnswer total_answers index question_id =
@@ -26,8 +27,16 @@ menuUpdateAnswer total_answers index answers =
         updateAnswer $ Answer (getAnswerId answer) (getMaybeString textAns)
             (getAnswerQuestionId answer)
         menuUpdateAnswer total_answers (index+1) answers
-    else 
+    else
         return ()
+
+getNumberAnswers:: Int -> IO Int
+getNumberAnswers typeQuestion = do
+    if typeQuestion /= 1 then do
+        qtd <- getLineWithMessage "Quantidade de respostas> "
+        return (read qtd)
+    else
+        return 2
 
 menuQuestion :: Int -> String -> [Question] -> IO ()
 -- opção de menu para cadastro de questões
@@ -36,10 +45,15 @@ menuQuestion 1 quiz_id questions = do
     formulation <- getLineWithMessage "Enunciado> "
     difficulty <- getLineWithMessage "Dificuldade> "
     duration <- getLineWithMessage "Duração(s)> "
-    qtd <- getLineWithMessage "Quantidade de respostas> "
-    questionId <- addQuestion formulation (read difficulty) (read duration) quiz_id -- cadastrando no bd
-    menuAddAnswer (read qtd) 0 questionId
-    rightAnswer <- getLineWithMessage "Resposta correta> "
+    typeQuestion <- getLineWithMessage
+        "Tipo de questão ([0]-Alternativa única, [1]-V/F, [2]-Múltipla escolha)> "
+    qtd <- getNumberAnswers (read typeQuestion)
+    questionId <- addQuestion formulation (read difficulty) (read duration) 
+        (read typeQuestion) quiz_id -- cadastrando no bd
+    menuAddAnswer qtd 0 questionId
+    rightAnswer <- getLineWithMessage 
+        (if typeQuestion == "2" then "Respostas corretas, separe por vírgula> " 
+            else "Resposta correta> ")
     updateQuestionRightAnswer questionId rightAnswer -- atualizando resposta
     printBorderTerminal
     resp <- getLineWithMessage "Questão cadastrada! Pressione enter para voltar..."
@@ -56,7 +70,7 @@ menuQuestion 2 quiz_id questions = do
     duration <- getAlterLine "Nova duração> " (show $ time question)
     rightAnswer <- getAlterLine "Nova resposta correta> " (getMaybeString (right_answer question))
     updateQuestion $ Question (getId question) (getMaybeString formulation)
-        (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id
+        (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id 0
     resp <- getLineWithMessage "Questão alterada! Pressione enter para voltar..."
     return ()
 
@@ -121,14 +135,14 @@ menuAnswer respQuestion questions quiz_id = do
 
 printAnswer:: [Answer] -> Int -> String
 printAnswer [] count = ""
-printAnswer answers count = 
+printAnswer answers count =
     charToString (['a'..'z']!!count) ++ ") "++
     show (head answers) ++ (if null $ tail answers then "" else "\n") ++
     printAnswer (tail answers) (count+1)
 
 printQuestion:: [Question] -> Int -> String
 printQuestion [] count = ""
-printQuestion questions count = 
+printQuestion questions count =
     show count ++ ", "++
     show (head questions) ++ (if null $ tail questions then "" else "\n") ++
     printQuestion (tail questions) (count+1)

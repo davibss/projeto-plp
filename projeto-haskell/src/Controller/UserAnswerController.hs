@@ -53,13 +53,14 @@ getAllAnswersFromUser user_id = do
     \ ua.suggestion, ua.score, ua.created_at FROM user_answer ua, quiz q WHERE \
     \q.quiz_id = ua.quiz_id AND ua.user_id = ?"  (Only user_id) :: IO [UserAnswer]
 
-getAllAnswersQuizFromUser:: String -> String -> IO [UserAnswerForQuiz]
-getAllAnswersQuizFromUser user_id quiz_id = do
+getAllAnswersQuizFromUser:: String -> String -> String -> IO [UserAnswerForQuiz]
+getAllAnswersQuizFromUser user_id quiz_id user_answer_id = do
     conn <- open dbPath
     query conn "SELECT (uaq.user_answer_id || '-' || uaq.question_id) as id, \
     \q.formulation, q.right_answer,uaq.markedAnswer,\
     \ uaq.timeSpent FROM user_answer ua, question q, user_answer_question uaq\
     \ WHERE ua.user_answer_id=uaq.user_answer_id AND\
     \ uaq.question_id=q.question_id\
-    \ AND ua.user_id=? AND ua.quiz_id=?"
-        (user_id:: String, quiz_id :: String) :: IO [UserAnswerForQuiz]
+    \ AND ua.user_id=? AND ua.quiz_id=? AND ua.user_answer_id=?"
+        (user_id:: String, quiz_id :: String, user_answer_id :: String)
+            :: IO [UserAnswerForQuiz]

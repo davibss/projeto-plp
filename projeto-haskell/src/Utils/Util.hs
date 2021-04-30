@@ -1,9 +1,12 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE KindSignatures #-}
 module Utils.Util where
 import System.IO
 import Data.UUID
 import Data.UUID.V4
 import Database.SQLite.Simple
-import Control.Monad.IO.Class ()
+-- import Control.Monad.IO.Class ()
 import System.Console.Haskeline
     ( defaultSettings,
       getInputLineWithInitial,
@@ -24,6 +27,10 @@ import Control.Exception
 import System.IO.Error hiding (catch)
 import Web.Browser (openBrowser)
 import Numeric
+import System.Random
+import System.Random.Shuffle
+import qualified Control.Monad.IO.Class
+import Data.List (permutations)
 
 -- caminho para a base de dados
 dbPath :: String
@@ -142,9 +149,31 @@ formatFloatN floatNum numOfDecimals = showFFloat (Just numOfDecimals) floatNum "
 
 -- converte uma string para UTCTime
 dateStringToUTCTime:: String -> UTCTime
-dateStringToUTCTime dateString = parseTimeOrError True defaultTimeLocale 
+dateStringToUTCTime dateString = parseTimeOrError True defaultTimeLocale
     "%Y-%m-%d %H:%M:%S" dateString :: UTCTime
 
 -- converte String para minusculas
 lowerString:: String -> String
 lowerString = map toLower
+
+removeAllSpaces:: String -> String
+removeAllSpaces = filter (/= ' ')
+
+
+myPureFunction :: Float -> Float
+myPureFunction x = 2 * x
+newRand = randomIO :: IO Int
+
+-- shuffleList :: [b] -> IO [b]
+-- shuffleList list = do
+--     let permuts = permutations list
+--     let sizeList = fromInteger (toInteger (length permuts))
+--     num <- randomIO :: IO Float
+--     let index = (num * (sizeList - 0) + 0)
+--     return (permuts!!(truncate index))
+
+shuffleList :: [a] -> IO [a]
+shuffleList [] = return []
+shuffleList xs = do randomPosition <- getStdRandom (randomR (0, length xs - 1))
+                    let (left, (a:right)) = splitAt randomPosition xs
+                    fmap (a:) (shuffleList (left ++ right))

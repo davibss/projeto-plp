@@ -35,5 +35,5 @@ module Entities.Quiz where
         sortBy compare quizzes else sortBy (flip compare) quizzes
 
     instance Show Quiz where
-        show (Quiz id name topic user_id created_at) = show (NoQuotes name)++
+        show (Quiz id name topic user_id created_at) = "Quiz: "++show (NoQuotes name)++
             ", Tópico: "++topic

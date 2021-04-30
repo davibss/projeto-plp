@@ -7,9 +7,11 @@ import Database.SQLite.Simple.ToField
 import Utils.Util
 import Database.SQLite.Simple.Types
 import Entities.Answer
+import Data.List (intercalate, intersperse)
 
 instance FromRow Question where
   fromRow = Question <$> field
+                     <*> field
                      <*> field
                      <*> field
                      <*> field
@@ -20,13 +22,13 @@ instance FromRow Answer where
                    <*> field
                    <*> field
 
-addQuestion :: String -> Int -> Int -> String -> IO String
-addQuestion formulation difficulty duration quizId = do
-    conn <- open dbPath 
+addQuestion :: String -> Int -> Int -> Int -> String -> IO String
+addQuestion formulation difficulty duration typeQuestion quizId = do
+    conn <- open dbPath
     uuidQuestion <- getRandomUUID
     execute conn "INSERT INTO question (question_id,formulation,difficulty,\
-        \time,quiz_id) VALUES (?,?,?,?,?)"
-        [uuidQuestion,formulation,show difficulty,show duration,quizId]
+        \time,type_question,quiz_id) VALUES (?,?,?,?,?,?)"
+        [uuidQuestion,formulation,show difficulty,show duration,show typeQuestion,quizId]
     return uuidQuestion
 
 getAllQuestions :: String -> IO [Question]
@@ -70,7 +72,7 @@ addAnswer textAnswer question_id = withConn dbPath $
 updateAnswer:: Answer -> IO()
 updateAnswer answer = do
       conn <- open dbPath
-      execute conn "UPDATE answer SET text = ?  WHERE answer_id = ?" 
+      execute conn "UPDATE answer SET text = ?  WHERE answer_id = ?"
         (text answer, getAnswerId answer)
 
 deleteAnswer :: Int -> IO ()

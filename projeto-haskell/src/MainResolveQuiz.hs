@@ -1,7 +1,7 @@
 module MainResolveQuiz where
 
 import Utils.Util (printBorderTerminal, getLineWithMessage, charToString, removeIfExists,
-    openFormulaInBrowser, calculateScore, getMaybeString, formatFloatN)
+    openFormulaInBrowser, calculateScore, getMaybeString, formatFloatN, removeAllSpaces)
 import System.Console.ANSI (clearScreen)
 import System.Console.Haskeline (getPassword, runInputT, defaultSettings)
 import Data.Maybe
@@ -57,6 +57,13 @@ printAnswerHtml answers count =
     "</tr>"++
     printAnswerHtml (tail answers) (count+1)
 
+getTypeQuestion:: Int -> String
+getTypeQuestion typeQuestion
+    | typeQuestion == 0 = "Única alternativa"
+    | typeQuestion == 1 = "Verdadeiro/Falso"
+    | typeQuestion == 2 = "Múltipla escolha"
+    | otherwise = "Tipo não listado"
+
 resolveQuestion:: [Question] -> Int -> IO [QuestionResponse]
 resolveQuestion [] index = return []
 resolveQuestion questions index = do
@@ -72,7 +79,8 @@ resolveQuestion questions index = do
     printBorderTerminal
     putStrLn $ "Você tem "++show (time (head questions))++"s para resolver está questão!!"
     printBorderTerminal
-    putStrLn $ "Questão "++show (index+1)++"> "++ formulation (head questions)
+    putStrLn $ "Questão "++show (index+1)++": "++ formulation (head questions)
+    putStrLn $ "Tipo de Questão: "++ getTypeQuestion(type_question (head questions))
     printBorderTerminal
     start <- getCurrentTime -- start time here
     putStrLn $ printAnswer answers 0
@@ -80,7 +88,8 @@ resolveQuestion questions index = do
     end <- getCurrentTime -- end time here
     removeIfExists "src/HTMLIO/formulaQuestao.html"
     nextQuestion <- resolveQuestion (tail questions) (index+1)
-    let score = if answer == getMaybeString (right_answer (head questions)) then
+    let score = if removeAllSpaces answer == 
+            removeAllSpaces (getMaybeString (right_answer (head questions))) then
             calculateScore start end (time (head questions))
             (difficulty (head questions)) else 0
     let difference = diffUTCTime end start
