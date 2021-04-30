@@ -7,7 +7,7 @@ import System.Console.ANSI ( clearScreen )
 import Data.Char ()
 import System.Exit ( exitSuccess )
 import System.IO ()
-import Utils.Util ( getLineWithMessage, printBorderTerminal, getAlterLine, getMaybeString )
+import Utils.Util ( getLineWithMessage, printBorderTerminal, getAlterLine, getMaybeString, lowerString )
 import CRUDQuestion
 import Data.Maybe (fromMaybe)
 import MainResolveQuiz (mainResolve)
@@ -83,7 +83,7 @@ menuQuiz 5 user_id = do
     else do
         getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
         mainQuiz user_id
-
+-- menu de alteracao de usuario
 menuQuiz 6 user_id = do
     printBorderTerminal
     user <- getUserById user_id
@@ -92,12 +92,24 @@ menuQuiz 6 user_id = do
     updateUser $ User user_id (getMaybeString nome) (getMaybeString email) ""
     getLineWithMessage "Pressione Enter para voltar ao menu principal..."
     mainQuiz user_id
-
+-- menu para listar os quizzes por topico
+menuQuiz 7 user_id = do
+    printBorderTerminal
+    quizzes <- getAllQuizzes
+    topicInput <- getLineWithMessage "Qual tópico deseja procurar?>"
+    let quizzesFiltered = filter (flip filterQuiz topicInput) quizzes
+    putStrLn $ printQuiz quizzesFiltered 1
+    printBorderTerminal
+    resp <- getLineWithMessage "Pressione enter para voltar..."
+    mainQuiz user_id
 menuQuiz cod user_id = do
     printBorderTerminal
     resp <- getLineWithMessage "Opção de menu não encontrada. Pressione enter para voltar..."
     mainQuiz user_id
 
+-- verifica se o topico do quiz eh o mesmo topico digitado pelo usuario
+filterQuiz:: Quiz -> String -> Bool
+filterQuiz quiz topicInput = lowerString(getTopic quiz) == lowerString topicInput
 -- menu para editar o quiz
 menuSelectedQuiz:: String -> Quiz -> IO()
 menuSelectedQuiz user_id quiz = do
@@ -152,6 +164,7 @@ mainQuiz user_id = do
     putStrLn "4 - Resolver Quizzes"
     putStrLn "5 - Quizzes Respondidos"
     putStrLn "6 - Alterar Usuário"
+    putStrLn "7 - Quizzes por Tópico"
     putStrLn "99 - Sair"
     printBorderTerminal
     resp <- getLineWithMessage "Opção> "
