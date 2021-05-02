@@ -27,10 +27,14 @@ menuQuiz 1 user_id = do
     printBorderTerminal
     nameQuiz <- getLineWithMessage "Nome do Quiz> "
     topicQuiz <- getLineWithMessage "Tópico do Quiz> "
-    addQuiz nameQuiz topicQuiz user_id
     printBorderTerminal
-    resp <- getLineWithMessage "Quiz cadastrado! Pressione enter para voltar..."
-    return ()
+    if nameQuiz == "" || topicQuiz == "" then
+        getLineWithMessage "Erro! Existe algum campo vazio. Pressione enter para voltar..."
+        >> return ()
+    else do
+        addQuiz nameQuiz topicQuiz user_id
+        resp <- getLineWithMessage "Quiz cadastrado! Pressione enter para voltar..."
+        return ()
 
 -- menu para listar os quizzes do usuário
 menuQuiz 2 user_id = do
@@ -43,28 +47,36 @@ menuQuiz 2 user_id = do
     if cod == "" then do
         return ()
     else do
-        menuSelectedQuiz user_id (quizzes!!(read cod-1))
-        return ()
+        if (read cod <= 0 || read cod > length quizzes) then
+            getLineWithMessage "Quiz não encontrado. Pressione Enter para voltar..."
+            >> return ()
+        else
+            menuSelectedQuiz user_id (quizzes!!(read cod-1))
+            >> return ()
 
 menuQuiz 3 user_id = do
     printBorderTerminal
     quizzes <- getAllQuizzes
-    topicInput <- getLineWithMessage "Qual tópico deseja procurar?>"
+    topicInput <- getLineWithMessage "Qual tópico deseja procurar, Enter para sair?> "
     let quizzesFiltered = filter (`filterQuiz` topicInput) quizzes
     putStrLn $ printWithIndex quizzesFiltered 1
     printBorderTerminal
-    resp <- getLineWithMessage "Escolha um quiz pelo número> "
-    if resp /= "" then
-        if read resp <= length quizzesFiltered && read resp > 0 then
-            mainResolve user_id (quizzesFiltered!!(read resp - 1))
-            >> getLineWithMessage "Enter para voltar ao menu principal..." >>
-            return ()
+    if topicInput /= "" && length quizzesFiltered > 0 then do
+        resp <- getLineWithMessage "Escolha um quiz pelo número> "
+        if resp /= "" then
+            if read resp <= length quizzesFiltered && read resp > 0 then
+                mainResolve user_id (quizzesFiltered!!(read resp - 1))
+                >> getLineWithMessage "Enter para voltar ao menu principal..." >>
+                return ()
+            else do
+                getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+                return ()
         else do
-            getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+            getLineWithMessage "Opção não encontrada. Pressione Enter para voltar..."
             return ()
-    else do
-        getLineWithMessage "Opção não encontrada. Pressione Enter para voltar..."
-        return ()
+    else
+        getLineWithMessage "Não há quiz com este tópico. Pressione Enter para voltar..."
+        >> return ()
 
 -- quizes respondidos
 menuQuiz 4 user_id = do
@@ -77,17 +89,20 @@ menuQuiz 4 user_id = do
     else do
         putStrLn $ printWithIndex quizzes 1
         printBorderTerminal
-        resp <- getLineWithMessage "Escolha um quiz pelo número> "
+        resp <- getLineWithMessage "Escolha um quiz pelo número, Enter para sair> "
         printBorderTerminal
         putStrLn "Respostas:"
-        if read resp <= length quizzes && read resp > 0 then do
-            allAnswersFromQuiz <- getAllAnswersQuizFromUser user_id
-                (getQuizAnswerId (quizzes!!(read resp-1))) (userAnswerId (quizzes!!(read resp-1)))
-            putStrLn $ printWithIndex allAnswersFromQuiz 1
-            getLineWithMessage "Pressione Enter para voltar ao menu principal..."
-            return ()
-        else do
-            getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+        if resp /= "" then
+            if read resp <= length quizzes && read resp > 0 then do
+                allAnswersFromQuiz <- getAllAnswersQuizFromUser user_id
+                    (getQuizAnswerId (quizzes!!(read resp-1))) (userAnswerId (quizzes!!(read resp-1)))
+                putStrLn $ printWithIndex allAnswersFromQuiz 1
+                getLineWithMessage "Pressione Enter para voltar ao menu principal..."
+                return ()
+            else do
+                getLineWithMessage "Quiz não encontrado! Pressione Enter para voltar ao menu principal..."
+                return ()
+        else
             return ()
 
 -- menu de alteracao de usuario
@@ -102,30 +117,34 @@ menuQuiz 5 user_id = do
 
 menuQuiz 6 user_id = do
     printBorderTerminal
-    topicInput <- getLineWithMessage "Qual tópico deseja procurar por questões?> "
+    topicInput <- getLineWithMessage "Qual tópico deseja procurar por questões? Enter \
+    \para sair> "
     printBorderTerminal
     quizzes <- getAllQuizzesAnswersUnique user_id
     let quizzesFiltered = filter (`filterQuiz` topicInput) quizzes
     allQuestions <- concatenateQuestions quizzesFiltered
-    if (length allQuestions == 0) then do
-        putStrLn "Não há questões..."
-        getLineWithMessage "Pressione enter para voltar..."
-        return ()
-    else do
-        putStrLn "Essas são as questões que você respondeu recentemente sobre este tópico:"
-        putStrLn $ printWithIndex allQuestions 1
-        printBorderTerminal
-        qtdQuest <- getLineWithMessage "Quantas questões quer no seu quiz?> "
-        if read qtdQuest > (length allQuestions) then do
-            getLineWithMessage "Número de questões em excesso... pressione enter para voltar..."
+    if topicInput /= "" then
+        if (length allQuestions == 0) then do
+            putStrLn "Não há questões..."
+            getLineWithMessage "Pressione enter para voltar..."
             return ()
         else do
-            questionsRandomized <- shuffleList allQuestions
-            newQuiz <- getLineWithMessage "Digite o nome do seu Super Quiz>"
-            uuidQuiz <- addQuiz newQuiz topicInput user_id -- cadastrando super quiz
-            creatingQuestions uuidQuiz (take (read qtdQuest) questionsRandomized)
-            putStrLn "Quiz e suas Questões criadas!"
-        resp <- getLineWithMessage "Pressione enter para voltar..."
+            putStrLn "Essas são as questões que você respondeu recentemente sobre este tópico:"
+            putStrLn $ printWithIndex allQuestions 1
+            printBorderTerminal
+            qtdQuest <- getLineWithMessage "Quantas questões quer no seu quiz?> "
+            if read qtdQuest > (length allQuestions) then do
+                getLineWithMessage "Número de questões em excesso. Pressione enter para voltar..."
+                return ()
+            else do
+                questionsRandomized <- shuffleList allQuestions
+                newQuiz <- getLineWithMessage "Digite o nome do seu Super Quiz>"
+                uuidQuiz <- addQuiz newQuiz topicInput user_id -- cadastrando super quiz
+                creatingQuestions uuidQuiz (take (read qtdQuest) questionsRandomized)
+                putStrLn "Quiz e suas Questões criadas!"
+                getLineWithMessage "Pressione enter para voltar..."
+                return ()
+    else
         return ()
 
 menuQuiz cod user_id = do
@@ -137,11 +156,11 @@ creatingQuestions:: String -> [Question] -> IO()
 creatingQuestions quiz_id [] = return ()
 creatingQuestions quiz_id questions = do
     let question = head questions
-    uuid <- addQuestion (formulation question) (difficulty question) (time question)
+    uuidQuestion <- addQuestion (formulation question) (difficulty question) (time question)
         (type_question question) quiz_id
-    updateQuestionRightAnswer (getIdQuestion question) (getMaybeString (right_answer question))
+    updateQuestionRightAnswer uuidQuestion (getMaybeString (right_answer question))
     answers <- getAllAnswers (getIdQuestion question)
-    creatingAnswers uuid answers
+    creatingAnswers uuidQuestion answers
     creatingQuestions quiz_id (tail questions)
 
 creatingAnswers:: String -> [Answer] -> IO()
@@ -192,9 +211,11 @@ menuSelectedQuiz user_id quiz = do
             return ()
         else if read resp == 0 then do
             deleteQuiz $ getIdQuiz quiz
-            putStrLn "Quiz deletado com sucesso!"
+            getLineWithMessage "Quiz deletado com sucesso! Pressione Enter para voltar..."
+            return ()
         else
-            putStrLn "Opção não listada"
+            getLineWithMessage "Opção não listada. Pressione Enter para voltar..."
+            >> return ()
     else
         menuQuiz 2 user_id
 

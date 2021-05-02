@@ -34,7 +34,13 @@ getNumberAnswers:: Int -> IO Int
 getNumberAnswers typeQuestion = do
     if typeQuestion /= 1 then do
         qtd <- getLineWithMessage "Quantidade de respostas> "
-        return (read qtd)
+        if qtd /= "" then
+            if read qtd < 0 then
+                return 0
+            else        
+                return (read qtd)
+        else
+            return 0
     else
         return 2
 
@@ -45,20 +51,36 @@ menuQuestion 1 quiz_id questions = do
     printBorderTerminal
     formulation <- getLineWithMessage "Enunciado> "
     difficulty <- getLineWithMessage "Dificuldade [0-Fácil,1-Média,2-Difícil]> "
-    duration <- getLineWithMessage "Duração(s)> "
+    duration <- getLineWithMessage "Duração(s) (Mínimo 10s)> "
     typeQuestion <- getLineWithMessage
         "Tipo de questão ([0]-Alternativa única, [1]-V/F, [2]-Múltipla escolha)> "
-    qtd <- getNumberAnswers (read typeQuestion)
-    questionId <- addQuestion formulation (read difficulty) (read duration) 
-        (read typeQuestion) quiz_id -- cadastrando no bd
-    menuAddAnswer qtd 0 questionId
-    rightAnswer <- getLineWithMessage 
-        (if typeQuestion == "2" then "Respostas corretas, separe por vírgula> " 
-            else "Resposta correta> ")
-    updateQuestionRightAnswer questionId rightAnswer -- atualizando resposta
-    printBorderTerminal
-    resp <- getLineWithMessage "Questão cadastrada! Pressione enter para voltar..."
-    return ()
+    if formulation == "" ||
+        (typeQuestion == "") || (difficulty == "") ||
+        ((read difficulty < 0) || (read difficulty > 2)) ||
+        (read duration < 10) || 
+        ((read typeQuestion < 0) || (read typeQuestion > 2)) then
+        getLineWithMessage "Algum campo não está correto. Pressione Enter para voltar..."
+        >> return ()
+    else do
+        qtd <- getNumberAnswers (read typeQuestion)
+        if (qtd > 0) then do
+            questionId <- addQuestion formulation (read difficulty) (read duration) 
+                (read typeQuestion) quiz_id -- cadastrando no bd
+            menuAddAnswer qtd 0 questionId
+            rightAnswer <- getLineWithMessage 
+                (if typeQuestion == "2" then "Respostas corretas, separe por vírgula> " 
+                    else "Resposta correta> ")
+            if typeQuestion /= "2" && rightAnswer == "" then
+                getLineWithMessage "Você precisa escolher uma resposta certa! Enter para voltar..."
+                >> return ()
+            else do
+                updateQuestionRightAnswer questionId rightAnswer -- atualizando resposta
+                printBorderTerminal
+                resp <- getLineWithMessage "Questão cadastrada! Pressione enter para voltar..."
+                return ()
+        else 
+            getLineWithMessage "Algum campo não está correto. Pressione Enter para voltar..."
+            >> return ()
 
 -- opção de menu para alterar questão
 menuQuestion 2 quiz_id questions = do
@@ -68,26 +90,38 @@ menuQuestion 2 quiz_id questions = do
     putStrLn $ printQuestion questions 1
     printBorderTerminal
     resp <- getLineWithMessage "Número da questão> "
-    let question = questions!!(read resp-1)
-    printBorderTerminal
-    formulation <- getAlterLine "Novo enunciado> " (formulation question)
-    difficulty <- getAlterLine "Nova dificuldade> " (show $ difficulty question)
-    duration <- getAlterLine "Nova duração> " (show $ time question)
-    rightAnswer <- getAlterLine "Nova resposta correta> " (getMaybeString (right_answer question))
-    updateQuestion $ Question (getIdQuestion question) (getMaybeString formulation)
-        (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id 0
-    resp <- getLineWithMessage "Questão alterada! Pressione enter para voltar..."
-    return ()
+    if resp == "" || (read resp <= 0) || (read resp > length questions) then
+        getLineWithMessage "Questão não encontrada. Pressione Enter para voltar..."
+        >> return ()
+    else do
+        let question = questions!!(read resp-1)
+        printBorderTerminal
+        formulation <- getAlterLine "Novo enunciado> " (formulation question)
+        difficulty <- getAlterLine "Nova dificuldade> " (show $ difficulty question)
+        duration <- getAlterLine "Nova duração> " (show $ time question)
+        rightAnswer <- getAlterLine "Nova resposta correta> " (getMaybeString (right_answer question))
+        updateQuestion $ Question (getIdQuestion question) (getMaybeString formulation)
+            (getMaybeInt difficulty) (getMaybeInt duration) rightAnswer quiz_id 0
+        resp <- getLineWithMessage "Questão alterada! Pressione enter para voltar..."
+        return ()
 
 -- opção de menu para entrar no menu de respostas
 menuQuestion 3 quiz_id questions = do
     clearScreen
-    putStrLn $ printQuestion questions 1
-    printBorderTerminal
-    respQuestion <- getLineWithMessage "Número da questão> "
-    clearScreen
-    menuAnswer respQuestion questions quiz_id
-    return ()
+    if length questions == 0 then
+        getLineWithMessage "Não há nenhuma questão cadastrada. Pressione Enter para voltar..."
+        >> return ()
+    else do
+        putStrLn $ printQuestion questions 1
+        printBorderTerminal
+        respQuestion <- getLineWithMessage "Número da questão> "
+        if respQuestion == "" || (read respQuestion <= 0) || (read respQuestion > length questions) then
+            getLineWithMessage "Questão não encontrada. Pressione Enter para voltar..."
+            >> return ()
+        else do
+            clearScreen
+            menuAnswer respQuestion questions quiz_id
+            return ()
 
 -- opção de menu para deletar questão
 menuQuestion 4 quiz_id questions = do
@@ -96,9 +130,13 @@ menuQuestion 4 quiz_id questions = do
     putStrLn $ printQuestion questions 1
     printBorderTerminal
     resp <- getLineWithMessage "Número da questão> "
-    deleteQuestion (getIdQuestion (questions!!(read resp - 1)))
-    resp <- getLineWithMessage "Questão deletada! Pressione enter para voltar..."
-    return ()
+    if resp == "" || (read resp <= 0) || (read resp > length questions) then
+        getLineWithMessage "Questão não encontrada. Pressione Enter para voltar..."
+        >> return ()
+    else do
+        deleteQuestion (getIdQuestion (questions!!(read resp - 1)))
+        resp <- getLineWithMessage "Questão deletada! Pressione enter para voltar..."
+        return ()
 
 menuQuestion cod quiz_id questions = putStrLn "Esta opção de menu não existe!..."
     >> return ()
@@ -121,6 +159,7 @@ menuAnswer respQuestion questions quiz_id = do
     printBorderTerminal
     resp <- getLineWithMessage "Opção> "
     let questionId = getIdQuestion (questions!!(read respQuestion -1))
+    clearScreen
     if resp == "1" then do
         menuAddAnswer (length answers + 1) (length answers) questionId
         putStr "Resposta adicionada! "
@@ -133,10 +172,14 @@ menuAnswer respQuestion questions quiz_id = do
         menuAnswer respQuestion questions quiz_id
     else if resp == "3" then do
         deleteN <- getLineWithMessage "Letra Resposta> "
-        deleteAnswer (getAnswerId (answers!!charIndex deleteN))
-        putStr "Resposta deletada! "
-        getLineWithMessage "Pressione enter para voltar..."
-        menuAnswer respQuestion questions quiz_id
+        if (head deleteN) `elem` take (length answers) ['a'..'z'] then do
+            deleteAnswer (getAnswerId (answers!!charIndex deleteN))
+            putStr "Resposta deletada! "
+            getLineWithMessage "Pressione enter para voltar..."
+            menuAnswer respQuestion questions quiz_id
+        else
+            getLineWithMessage "Resposta não encontrada. Pressione Enter para voltar..."
+            >> return ()
     else do
         return ()
     return ()
@@ -162,7 +205,9 @@ mainQuestion quiz_id = do
     putStrLn "Nº Questão"
     printBorderTerminal
     questions <- getAllQuestions quiz_id
-    putStrLn $ printQuestion questions 1
+    if length questions == 0 then
+        putStrLn "Nenhum questão cadastrada."
+    else putStrLn $ printQuestion questions 1
     printBorderTerminal
     putStrLn "1 - Cadastrar questão"
     putStrLn "2 - Alterar questão"

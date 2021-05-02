@@ -15,6 +15,7 @@ import Controller.UserAnswerController (addUserAnswer, addUserAnswerQuestion)
 import Data.Time (getCurrentTime)
 import Data.Time.Clock (diffUTCTime)
 import System.IO
+import Text.Read
 -- import GHC.IO.Handle
 
 data QuestionResponse = QuestionResponse {
@@ -74,7 +75,7 @@ resolveQuestion questions index = do
     answers <- getAllAnswers (getIdQuestion (head questions))
     printBorderTerminal
     openB <- getLineWithMessage "A visualização é melhor no navegador,\
-        \ abrir? [S/N]> "
+        \ abrir? [s/n]> "
     when (map toLower openB == "s") $
         openFormulaInBrowser (formulation (head questions)++makeHtmlTable answers)
         >> putStrLn "Página no navegador aberta..."
@@ -86,6 +87,7 @@ resolveQuestion questions index = do
     printBorderTerminal
     start <- getCurrentTime -- start time here
     putStrLn $ printAnswer answers 0
+    hFlush stdout
     answer <- getLineWithMessage "Sua resposta> "
     hFlush stdout
     end <- getCurrentTime -- end time here
@@ -99,6 +101,20 @@ resolveQuestion questions index = do
     return (QuestionResponse (getIdQuestion (head questions)) score
         (floor difference) answer:nextQuestion)
 
+loopAnswer :: IO Int
+loopAnswer = loop
+    where
+        loop :: IO Int
+        loop = do
+            rating <- getLineWithMessage "Avaliação [0 a 10]> "
+            if rating /= "" then
+                if read rating < 0 || read rating > 10 then do
+                    putStrLn "Erro. Você só pode avaliar de 0 a 10! Tente novamente..."
+                    loop
+                else
+                    return $ read rating
+            else do return 0
+
 startQuiz:: [Question] -> IO QuizResponse
 startQuiz questions = do
     questionsResponse <- resolveQuestion questions 0
@@ -106,11 +122,12 @@ startQuiz questions = do
     let totalScore = sum $ map score questionsResponse
     putStrLn $ "Sua pontuação: "++formatFloatN totalScore 2
     putStrLn "Agora que terminou de responder, avalie este quiz"
-    rating <- getLineWithMessage "Avaliação [0 a 10]> "
+    -- rating <- getLineWithMessage "Avaliação [0 a 10]> "
+    rating <- loopAnswer
     suggestion <- getLineWithMessage "Sugestão> "
     putStrLn "Obrigado por responder!"
     printBorderTerminal
-    return (QuizResponse (read rating) suggestion totalScore questionsResponse)
+    return (QuizResponse (rating) suggestion totalScore questionsResponse)
 
 totalTime:: [Question] -> Int
 totalTime questions = do
@@ -134,7 +151,7 @@ mainResolve user_id quiz = do
     putStrLn $ "Tópico do Quiz: "++getTopic quiz
     putStrLn $ "Tempo limite para responder o quiz: "++show (totalTime questions)
     printBorderTerminal
-    resp <- getLineWithMessage "Deseja responder o quiz agora? [S/N]> "
+    resp <- getLineWithMessage "Deseja responder o quiz agora? [s/n]> "
     when (map toLower resp == "s") $ do
         response <- startQuiz questions
         idAnswer <- addUserAnswer user_id (getIdQuiz quiz) (rating response)
