@@ -229,6 +229,9 @@ printWithIndex array index = show index ++ ", "++
 mainQuiz:: String -> IO()
 mainQuiz user_id = do
     clearScreen
+    user <- getUserById user_id
+    points <- getUserPointsById user_id
+    putStrLn $ name (head user)++", "++show points++" pontos"
     printBorderTerminal
     putStrLn "1 - Cadastrar Quiz"
     putStrLn "2 - Meus Quizzes"
