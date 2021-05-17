@@ -1,8 +1,22 @@
 :- module(menuQuiz, [menuQuiz/1]).
 
-:- use_module('../utils/util.pl',[readLineText/2, printBorderTerminal/0, clearScreen/0]).
+:- use_module('../utils/util.pl',
+    [readLineText/2, 
+    printBorderTerminal/0, 
+    clearScreen/0,
+    updateAttribute/3
+    ]).
 :- use_module('../controllers/quizController.pl',
-    [createQuiz/3,getAllQuizzes/1,printQuizzes/2,getAllMyQuizzes/2]).
+    [createQuiz/3,
+    getAllQuizzes/1,
+    printQuizzes/2,
+    getAllMyQuizzes/2,
+    deleteQuiz/1,
+    printQuiz/1,
+    updateQuiz/3
+    ]).
+
+:- use_module('./menuQuestion.pl',[menuQuestion/1]).
 
 menuQuiz(UserID) :-
     clearScreen,
@@ -16,7 +30,7 @@ menuQuiz(UserID) :-
     writeln("99 - Deslogar"),
     printBorderTerminal,
     readLineText("Opção> ", Opc),
-    menuQuizOpc(Opc, UserID),
+    menuQuizOpc(Opc, UserID), !,
     Opc \= "99" -> menuQuiz(UserID) ; !.
 
 menuQuizOpc("1", UserId) :- 
@@ -33,7 +47,56 @@ menuQuizOpc("2",UserId) :-
     getAllMyQuizzes(UserId,Quizzes),
     printQuizzes(Quizzes,1),
     printBorderTerminal,
-    readLineText("Enter para voltar...", _).
+    readLineText("Selecione um quiz pelo número para editar, Enter para sair> ", QOpc),
+    (QOpc \= "" -> 
+        length(Quizzes, QSize), number_codes(NOpc, QOpc), 
+        checkQuizInterval(NOpc,QSize,Quizzes)
+        ) ; !.
 
 menuQuizOpc("99", _) :- !.
 menuQuizOpc(_, _) :- readLineText("Opção não encontrada. Enter para voltar...", _).
+
+checkQuizInterval(NOpc, Size, Quizzes) :- 
+    NOpc > 0, NOpc =< Size, 
+    Index is NOpc -1, nth0(Index, Quizzes, Quiz),
+    menuQuizSelected(Quiz).
+checkQuizInterval(_, _, _, _) :- readLineText("Quiz fora do intervalo, Enter para voltar...",_).
+
+menuQuizSelected(Quiz) :-
+    clearScreen,
+    printQuiz(Quiz),
+    printBorderTerminal,
+    writeln("1 - Ver questões"),
+    writeln("2 - Alterar quiz"),
+    writeln("0 - Deletar quiz"),
+    printBorderTerminal,
+    readLineText("Selecione uma opção ou pressione Enter para voltar> ", Opc),
+    menuQuizSelectedOpt(Opc,Quiz).
+
+menuQuizSelectedOpt("1",Quiz) :- 
+    Quiz = row(QuizId,_,_,_,_),
+    menuQuestion(QuizId).
+
+menuQuizSelectedOpt("2",Quiz) :-
+    Quiz = row(QuizId,Name,Topic,_,_), 
+    clearScreen,
+    printQuiz(Quiz),
+    printBorderTerminal,
+    writeln("Digite um novo atributo se quiser alterar, se não apenas dê enter..."),
+    printBorderTerminal,
+    readLineText("Nome> ",NewName),
+    readLineText("Tópico> ",NewTopic),
+    updateAttribute(Name,NewName,UpdatedName),
+    updateAttribute(Topic,NewTopic,UpdatedTopic),
+    ((NewName \= "" ; NewTopic \= "") ->
+        updateQuiz(QuizId, UpdatedName, UpdatedTopic), 
+        readLineText("Quiz alterado. Enter para voltar...",_)) ; 
+        readLineText("Nada a alterar. Enter para voltar...",_). 
+
+menuQuizSelectedOpt("0",Quiz) :- 
+    Quiz = row(QuizId,_,_,_,_),
+    deleteQuiz(QuizId),
+    readLineText("Quiz deletado. Enter para voltar...",_).
+
+menuQuizSelectedOpt("",_) :- !.
+menuQuizSelectedOpt(_,_) :- readLineText("Opção não encontrada. Enter para voltar...", _).

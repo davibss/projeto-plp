@@ -1,7 +1,8 @@
 :- module(utils, [
             readLineText/2,
             printBorderTerminal/0,
-            clearScreen/0
+            clearScreen/0,
+            updateAttribute/3
             ]).
 
 % predicado para ler o input de um usuário com texto, sem precisar de .
@@ -17,3 +18,6 @@ repl(X, N, L) :-
 
 % predicado para limpar a tela
 clearScreen :- write('\e[H\e[2J').
+
+updateAttribute(OldAttribute, "", UpdatedAttribute) :- UpdatedAttribute = OldAttribute.
+updateAttribute(_, NewAttribute, UpdatedAttribute) :- UpdatedAttribute = NewAttribute.

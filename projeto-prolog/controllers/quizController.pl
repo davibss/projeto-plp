@@ -1,4 +1,12 @@
-:- module(quizController, [createQuiz/3,getAllQuizzes/1,printQuizzes/2,getAllMyQuizzes/2]).
+:- module(quizController, 
+    [createQuiz/3,
+     getAllQuizzes/1,
+     printQuizzes/2,
+     getAllMyQuizzes/2,
+     deleteQuiz/1,
+     printQuiz/1,
+     updateQuiz/3
+    ]).
 
 :- use_module( library(prosqlite) ).
 
@@ -24,6 +32,24 @@ getAllMyQuizzes(UserId,Quizzes) :-
     format(atom(Query), "SELECT * FROM quiz WHERE user_id = '~w';",[UserId]),
     findall( Row, sqlite_query(db, Query, Row), Quizzes ),
     sqlite_disconnect( db ).
+
+updateQuiz(QuizId, NewName, NewTopic) :-
+    sqlite_connect( 'database/quiz-database.sqlite', db),
+    format(atom(Query), "UPDATE quiz SET name = '~w', topic = '~w' WHERE quiz_id = '~w';",
+        [NewName,NewTopic,QuizId]),
+    sqlite_query(db, Query, _),
+    sqlite_disconnect( db ).
+
+deleteQuiz(QuizId) :-
+    sqlite_connect( 'database/quiz-database.sqlite', db),
+    format(atom(Query), "DELETE FROM quiz WHERE quiz_id = '~w';",[QuizId]),
+    sqlite_query(db, 'PRAGMA foreign_keys = ON;',_),
+    sqlite_query(db, Query, _),
+    sqlite_disconnect( db ).
+
+printQuiz(Quiz) :- 
+    Quiz = row(_,Name,Topic,_,_),
+    format('Nome: ~w, Tópico: ~w\n',[Name,Topic]).
 
 % formato da entrada: [row(QuizId,Name,Topic,UserId,CreatedAt)]
 printQuizzes([],_).
