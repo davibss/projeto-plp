@@ -24,6 +24,8 @@
         createAnswer/2
     ]).
 
+:- use_module('./menuAnswer.pl', [menuAnswer/1]).
+
 menuQuestion(QuizId) :-
     clearScreen,
     printBorderTerminal,
@@ -69,7 +71,18 @@ menuQuestionOpc("2",_, Questions):-
     readLineText("Questão alterada. Enter para voltar...",_)) ; 
     readLineText("Número fora do intervalo. Enter para voltar...",_).
 
-menuQuestionOpc("3",_, _).
+menuQuestionOpc("3",_, Questions) :- 
+    clearScreen,
+    printBorderTerminal,
+    printQuestions(Questions,1),
+    printBorderTerminal,
+    readLineText("Selecione uma questão para ver as respostas> ", QIndex), 
+    number_codes(IntQIndex, QIndex),
+    IndexQuestion is IntQIndex - 1,
+    (nth0(IndexQuestion,Questions,Question) -> 
+    menuAnswer(Question)) ; 
+    readLineText("Número fora do intervalo. Enter para voltar...",_).
+
 menuQuestionOpc("4",_, Questions) :- 
     clearScreen,
     printBorderTerminal,
