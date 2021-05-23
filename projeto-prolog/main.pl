@@ -1,9 +1,15 @@
 :- use_module('utils/util.pl').
 :- use_module('menus/menuQuiz.pl',[menuQuiz/1]).
 
-% auxiliar para cadastrar quizzes
-user("1","441f76e1-bce8-4c91-a828-bed67696b3a0").
-user("2","2adee2d7-b1a9-4568-afa6-bcb248588962").
+:- use_module('controllers/userController.pl', 
+    [
+        createUser/3,
+        getUserById/2,
+        getUserByEmail/2,
+        updateUser/3
+    ]).
+
+:- use_module('./utils/connectionDB.pl', [db/0]).
 
 % predicado de entrada para o programa
 main :-
@@ -18,13 +24,29 @@ main :-
     Opc \= "99" -> main ; halt.
 
 mainMenuOpc("1") :- login, !.
+mainMenuOpc("2") :- 
+    clearScreen,
+    printBorderTerminal,
+    writeln("Digite os dados do usuário"),
+    printBorderTerminal,
+    readLineText("Nome> ",Name),
+    readLineText("Email> ",Email),
+    readLineText("Senha> ",Password),
+    createUser(Name,Email,Password),
+    readLineText("Usuário cadastrado. Enter para voltar...",_).
+
 mainMenuOpc("99") :- !.
 mainMenuOpc(_) :- readLineText("Opção não encontrada. Enter para voltar...", _).
 
-% predicado temporário para login, código de login válidos: 1 ou 2
 login :-
     clearScreen,
     printBorderTerminal,
-    readLineText("Código do usuário> ",Cod),
-    user(Cod,UUID) -> menuQuiz(UUID) ; 
-        readLineText("Usuário não encontrado. Enter para voltar...", _).
+    readLineText("Email> ",Email),
+    readLineText("Senha> ",Password),
+    (getUserByEmail(Email,User) -> 
+        User = row(UserId,_,_,HashedPassword), validatePassword(Password,HashedPassword,UserId) ; 
+        readLineText("Usuário não encontrado. Enter para voltar...", _)).
+
+validatePassword(Password,HashedPassword,UserId) :-
+    (crypto_password_hash(Password,HashedPassword) -> menuQuiz(UserId)) ; 
+    readLineText("Senha incorreta. Enter para voltar...", _).

@@ -16,7 +16,15 @@
     updateQuiz/3
     ]).
 
+:- use_module('../controllers/userController.pl',
+    [
+        getUserById/2,
+        updateUser/3
+    ]).
+
 :- use_module('./menuQuestion.pl',[menuQuestion/1]).
+
+:- use_module('./menuResolveQuiz.pl',[menuResolveQuiz/2]).
 
 menuQuiz(UserID) :-
     clearScreen,
@@ -45,13 +53,40 @@ menuQuizOpc("2",UserId) :-
     clearScreen,
     printBorderTerminal,
     getAllMyQuizzes(UserId,Quizzes),
-    printQuizzes(Quizzes,1),
+    length(Quizzes, Length),
+    (Length =:= 0 -> writeln("Não há quizzes cadastrados.") ; printQuizzes(Quizzes,1)),
     printBorderTerminal,
     readLineText("Selecione um quiz pelo número para editar, Enter para sair> ", QOpc),
     (QOpc \= "" -> 
         length(Quizzes, QSize), number_codes(NOpc, QOpc), 
         checkQuizInterval(NOpc,QSize,Quizzes)
         ) ; !.
+
+menuQuizOpc("3",UserId) :-
+    clearScreen,
+    printBorderTerminal,
+    getAllQuizzes(Quizzes),
+    printQuizzes(Quizzes,1),
+    printBorderTerminal,
+    readLineText("Selecione um quiz pelo número para resolver, Enter para sair> ", QOpc),
+    (QOpc \= "" -> 
+        number_codes(NOpc, QOpc), QuizIndex is NOpc - 1,
+        (nth0(QuizIndex, Quizzes, Quiz) -> menuResolveQuiz(Quiz,UserId); 
+            readLineText("Quiz não encontrado. Enter para voltar...", _))
+        ) ; !.
+
+menuQuizOpc("5",UserId) :- 
+    getUserById(UserId,User),
+    User = row(_,Name,Email,_),
+    writeln("Digite novos atributos, se não quiser alterar, aperte Enter"),
+    readLineText("Novo Nome> ",NewName),
+    readLineText("Novo Email> ",NewEmail),
+    ((NewName \= "" ; NewEmail \= "") ->
+        updateAttribute(Name,NewName,UpdatedName),
+        updateAttribute(Email,NewEmail,UpdatedEmail),
+        updateUser(UserId,UpdatedName,UpdatedEmail),
+        readLineText("Usuário alterado. Enter para voltar...",_)) ; 
+        readLineText("Nada a alterar. Enter para voltar...",_).
 
 menuQuizOpc("99", _) :- !.
 menuQuizOpc(_, _) :- readLineText("Opção não encontrada. Enter para voltar...", _).
@@ -60,7 +95,7 @@ checkQuizInterval(NOpc, Size, Quizzes) :-
     NOpc > 0, NOpc =< Size, 
     Index is NOpc -1, nth0(Index, Quizzes, Quiz),
     menuQuizSelected(Quiz).
-checkQuizInterval(_, _, _, _) :- readLineText("Quiz fora do intervalo, Enter para voltar...",_).
+checkQuizInterval(_, _, _, _, _) :- readLineText("Quiz fora do intervalo, Enter para voltar...",_).
 
 menuQuizSelected(Quiz) :-
     clearScreen,

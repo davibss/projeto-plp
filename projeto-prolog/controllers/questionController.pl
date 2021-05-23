@@ -17,40 +17,30 @@ difficulty(1,"Média").
 difficulty(2,"Difícil").
 
 createQuestion(Formulation, Difficulty, Duration, TypeQuestion, QuizId, QuestionId) :-
-    sqlite_connect( 'database/quiz-database.sqlite', db),
     uuid(QuestionUUID),
     format(atom(Query), "INSERT INTO question (question_id,formulation,difficulty,time,type_question,quiz_id) VALUES ('~w','~w',~d,~d,~d,'~w');",
         [QuestionUUID,Formulation,Difficulty,Duration,TypeQuestion,QuizId]),
     sqlite_query( db, Query, _),
-    sqlite_disconnect( db ),
     QuestionId = QuestionUUID.
 
 updateQuestionRightAnswer(QuestionId, RightAnswer) :-
-    sqlite_connect( 'database/quiz-database.sqlite', db),
     format(atom(Query), "UPDATE question SET right_answer = '~w' WHERE question_id = '~w'",
         [RightAnswer, QuestionId]),
-    sqlite_query( db, Query, _),
-    sqlite_disconnect( db ).
+    sqlite_query( db, Query, _).
 
 getAllQuestions(QuizId,Questions) :-
-    sqlite_connect( 'database/quiz-database.sqlite', db),
     format(atom(Query), "SELECT * from question WHERE quiz_id = '~w';",[QuizId]),
-    findall( Row, sqlite_query(db, Query, Row), Questions ),
-    sqlite_disconnect( db ).
+    findall( Row, sqlite_query(db, Query, Row), Questions ).
 
 updateQuestion(QuestionId, Formulation, Difficulty, Duration, RightAnswer) :-
-    sqlite_connect( 'database/quiz-database.sqlite', db),
     format(atom(Query), "UPDATE question SET formulation = '~w', difficulty = ~d, time = ~d, right_answer = '~w' WHERE question_id = '~w';",
         [Formulation,Difficulty,Duration,RightAnswer,QuestionId]),
-    sqlite_query(db, Query, _),
-    sqlite_disconnect( db ).
+    sqlite_query(db, Query, _).
 
 deleteQuestion(QuestionId) :-
-    sqlite_connect( 'database/quiz-database.sqlite', db),
     format(atom(Query), "DELETE FROM question WHERE question_id = '~w';",[QuestionId]),
     sqlite_query(db, 'PRAGMA foreign_keys = ON;',_),
-    sqlite_query(db, Query, _),
-    sqlite_disconnect( db ).
+    sqlite_query(db, Query, _).
 
 printQuestion(Question) :- 
     Question = row(_,Formulation,DifficultyN,Duration,_,_,_),
