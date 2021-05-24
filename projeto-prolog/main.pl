@@ -1,4 +1,5 @@
 :- use_module('utils/util.pl').
+:- use_module('utils/password.pl',[getPassword/1]).
 :- use_module('menus/menuQuiz.pl',[menuQuiz/1]).
 
 :- use_module('controllers/userController.pl', 
@@ -31,9 +32,9 @@ mainMenuOpc("2") :-
     printBorderTerminal,
     readLineText("Nome> ",Name),
     readLineText("Email> ",Email),
-    readLineText("Senha> ",Password),
+    getPassword(Password),
     createUser(Name,Email,Password),
-    readLineText("Usuário cadastrado. Enter para voltar...",_).
+    readLineText("\nUsuário cadastrado. Enter para voltar...",_).
 
 mainMenuOpc("99") :- !.
 mainMenuOpc(_) :- readLineText("Opção não encontrada. Enter para voltar...", _).
@@ -42,11 +43,11 @@ login :-
     clearScreen,
     printBorderTerminal,
     readLineText("Email> ",Email),
-    readLineText("Senha> ",Password),
+    getPassword(Password),
     (getUserByEmail(Email,User) -> 
         User = row(UserId,_,_,HashedPassword), validatePassword(Password,HashedPassword,UserId) ; 
-        readLineText("Usuário não encontrado. Enter para voltar...", _)).
+        readLineText("\nUsuário não encontrado. Enter para voltar...", _)).
 
 validatePassword(Password,HashedPassword,UserId) :-
     (crypto_password_hash(Password,HashedPassword) -> menuQuiz(UserId)) ; 
-    readLineText("Senha incorreta. Enter para voltar...", _).
+    readLineText("\nSenha incorreta. Enter para voltar...", _).
