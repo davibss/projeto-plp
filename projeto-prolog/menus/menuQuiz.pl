@@ -17,7 +17,9 @@
     updateQuiz/3,
     getAllQuizzesWithQuestions/1,
     getAllUserAnsweredQuizzes/2,
-    getAllUserAnsweredQuizzesUnique/2
+    getAllUserAnsweredQuizzesUnique/2,
+    getAllQuizzesAnswers/2,
+    printQuizAnswers/2
     ]).
 
 :- use_module('../controllers/userController.pl',
@@ -39,6 +41,12 @@
     [
         createAnswer/2,
         getAllAnswers/2
+    ]).
+
+:- use_module('../controllers/userAnswerController.pl',
+    [
+        getAllAnswersQuizFromUser/4,
+        printAllAnswers/2
     ]).
 
 :- use_module('./menuQuestion.pl',[menuQuestion/1]).
@@ -90,15 +98,31 @@ menuQuizOpc("2",UserId) :-
 menuQuizOpc("3",UserId) :-
     clearScreen,
     printBorderTerminal,
-    getAllQuizzesWithQuestions(Quizzes),
-    printQuizzes(Quizzes,1),
+    readLineText("Digite o tópico do quiz> ", Topic),
     printBorderTerminal,
-    readLineText("Selecione um quiz pelo número para resolver, Enter para sair> ", QOpc),
-    (QOpc \= "" -> 
+    getAllQuizzesWithQuestions(Quizzes),
+    include([X]>>(filterQuizzesByTopic(X,Topic)), Quizzes, QuizzesFiltered),
+    length(QuizzesFiltered, LenQuizzes),
+    (LenQuizzes > 0 -> 
+        printQuizzes(QuizzesFiltered,1),
+        printBorderTerminal,
+        readLineText("Selecione um quiz pelo número para resolver, Enter para sair> ", QOpc),
+        ((QOpc \= "" -> 
         number_codes(NOpc, QOpc), QuizIndex is NOpc - 1,
-        (nth0(QuizIndex, Quizzes, Quiz) -> menuResolveQuiz(Quiz,UserId); 
+        (nth0(QuizIndex, QuizzesFiltered, Quiz) -> menuResolveQuiz(Quiz,UserId); 
             readLineText("Quiz não encontrado. Enter para voltar...", _))
-        ) ; !.
+        ) ; ! )
+        ;
+        readLineText("Não há quizzes com este tópico. Enter para voltar...",_)).
+
+menuQuizOpc("4",UserId) :-
+    clearScreen,
+    printBorderTerminal,
+    getAllQuizzesAnswers(UserId,QuizzesAnswers),
+    length(QuizzesAnswers, LenQuizzesAnswers),
+    (LenQuizzesAnswers > 0 -> 
+        printQuizAnswers(QuizzesAnswers,1), menuQuizAnswers(QuizzesAnswers,UserId); 
+        readLineText("Você ainda não respondeu nenhum quiz. Enter para voltar...",_)).
 
 menuQuizOpc("5",UserId) :- 
     getUserById(UserId,User),
@@ -169,6 +193,8 @@ menuQuizSelectedOpt("2",Quiz) :-
         readLineText("Quiz alterado. Enter para voltar...",_)) ; 
         readLineText("Nada a alterar. Enter para voltar...",_). 
 
+
+
 menuQuizSelectedOpt("0",Quiz) :- 
     Quiz = row(QuizId,_,_,_,_),
     deleteQuiz(QuizId),
@@ -207,3 +233,28 @@ creatingAnswersSuperQuiz([H|T], NewQuestionId) :-
     H = row(_,Text,_),
     createAnswer(Text,NewQuestionId),
     creatingAnswersSuperQuiz(T,NewQuestionId).
+
+filterQuizzesByTopic(Quiz, Topic) :-
+    Quiz = row(_,_,TopicQuiz,_,_),
+    string_lower(Topic, TopicLower),
+    string_lower(TopicQuiz, TopicQuizLower),
+    (TopicLower = TopicQuizLower -> true; false).
+
+menuQuizAnswers(QuizzesAnswers,UserId) :-
+    printBorderTerminal,
+    readLineText("Selecione uma resposta para ver detalhes. Enter para voltar> ",IndexAnswer),
+    printBorderTerminal,
+    (IndexAnswer \= "" -> 
+        number_string(IndexAnswerInt, IndexAnswer),
+        RealIndex is IndexAnswerInt - 1,
+        (nth0(RealIndex,QuizzesAnswers,Element) -> menuQuizAnswersDetails(Element,UserId) ; 
+            readLineText("Índice fora do intervalo. Enter para voltar...",_)) ; !).
+
+menuQuizAnswersDetails(QuizAnswer,UserId) :-
+    QuizAnswer = row(QuizId,_,_,UserAnswerId,_,_,_),
+    getAllAnswersQuizFromUser(UserId,QuizId,UserAnswerId,Answers),
+    printAllAnswers(Answers,1),
+    printBorderTerminal,
+    readLineText("Enter para voltar...",_).
+
+

@@ -8,7 +8,9 @@
      updateQuiz/3,
      getAllQuizzesWithQuestions/1,
      getAllUserAnsweredQuizzes/2,
-     getAllUserAnsweredQuizzesUnique/2
+     getAllUserAnsweredQuizzesUnique/2,
+     getAllQuizzesAnswers/2,
+     printQuizAnswers/2
     ]).
 
 :- use_module( library(prosqlite) ).
@@ -47,6 +49,12 @@ getAllUserAnsweredQuizzesUnique(UserId,Quizzes) :-
         ua.user_id = '~w';",[UserId]),
     findall( Row, sqlite_query(db, Query, Row), Quizzes ).
 
+getAllQuizzesAnswers(UserId,Quizzes) :-
+    format(atom(Query), "SELECT q.quiz_id, q.name, q.topic, ua.user_answer_id,
+        ua.score, ua.rating, ua.created_at FROM quiz q, user_answer ua
+        WHERE q.quiz_id = ua.quiz_id AND ua.user_id = '~w';",[UserId]),
+    findall( Row, sqlite_query(db, Query, Row), Quizzes ).
+
 updateQuiz(QuizId, NewName, NewTopic) :-
     format(atom(Query), "UPDATE quiz SET name = '~w', topic = '~w' WHERE quiz_id = '~w';",
         [NewName,NewTopic,QuizId]),
@@ -68,3 +76,11 @@ printQuizzes([H|T],Index) :-
     format('~d - Nome: ~w, Tópico: ~w\n',[Index,Name,Topic]),
     NIndex is Index + 1, 
     printQuizzes(T, NIndex).
+
+printQuizAnswers([], _).
+printQuizAnswers([H|T], Index) :-
+    H = row(_,QuizName,QuizTopic,_,Score,Rating,CreatedAt),
+    format('~d - Quiz: ~w, Tópico: ~w, Pontuação: ~2f, Avaliação: ~d, Respondeu em: ~w\n',
+        [Index,QuizName,QuizTopic,Score,Rating,CreatedAt]),
+    NIndex is Index + 1, 
+    printQuizAnswers(T, NIndex).

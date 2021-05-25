@@ -16,7 +16,11 @@ readLineText(Text, Input) :-
     read_string(user_input, "\n", "\t ", _, Input).
 
 % predicado que printa uma borda para o terminal
-printBorderTerminal :- repl("-",72,L), atomics_to_string(L, '', A), writeln(A).
+printBorderTerminal :- 
+    tty_size(_,Columns), 
+    repl("-",Columns,L), 
+    atomics_to_string(L, '', A), 
+    writeln(A).
 
 % predicado que repete um elemento X, N vezes
 repl(X, N, L) :-
