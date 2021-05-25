@@ -4,22 +4,41 @@
     [readLineText/2, 
     printBorderTerminal/0, 
     clearScreen/0,
-    updateAttribute/3
+    updateAttribute/3,
+    take/3
     ]).
 :- use_module('../controllers/quizController.pl',
-    [createQuiz/3,
+    [createQuiz/4,
     getAllQuizzes/1,
     printQuizzes/2,
     getAllMyQuizzes/2,
     deleteQuiz/1,
     printQuiz/1,
-    updateQuiz/3
+    updateQuiz/3,
+    getAllQuizzesWithQuestions/1,
+    getAllUserAnsweredQuizzes/2,
+    getAllUserAnsweredQuizzesUnique/2
     ]).
 
 :- use_module('../controllers/userController.pl',
     [
         getUserById/2,
-        updateUser/3
+        updateUser/3,
+        getUserPointsById/2
+    ]).
+
+:- use_module('../controllers/questionController.pl',
+    [
+        createQuestion/6,
+        updateQuestionRightAnswer/2,
+        getAllQuestions/2,
+        printQuestions/2
+    ]).
+
+:- use_module('../controllers/answersController.pl',
+    [
+        createAnswer/2,
+        getAllAnswers/2
     ]).
 
 :- use_module('./menuQuestion.pl',[menuQuestion/1]).
@@ -28,6 +47,12 @@
 
 menuQuiz(UserID) :-
     clearScreen,
+    printBorderTerminal,
+    getUserById(UserID,User),
+    User = row(_,Name,_,_),
+    getUserPointsById(UserID,Row), Row = row(Points),
+    (Points \= '' -> UserPoints = Points ; UserPoints = 0),
+    format('~w, ~1f pontos\n',[Name,UserPoints]),
     printBorderTerminal,
     writeln("1 - Cadastrar Quiz"),
     writeln("2 - Meus Quizzes"),
@@ -46,7 +71,7 @@ menuQuizOpc("1", UserId) :-
     printBorderTerminal,
     readLineText("Nome do Quiz> ", Name),
     readLineText("Tópico do Quiz> ", Topic),
-    createQuiz(Name,Topic,UserId),
+    createQuiz(Name,Topic,UserId,_),
     readLineText("Quiz cadastrado, Enter para voltar...", _).
 
 menuQuizOpc("2",UserId) :-
@@ -65,7 +90,7 @@ menuQuizOpc("2",UserId) :-
 menuQuizOpc("3",UserId) :-
     clearScreen,
     printBorderTerminal,
-    getAllQuizzes(Quizzes),
+    getAllQuizzesWithQuestions(Quizzes),
     printQuizzes(Quizzes,1),
     printBorderTerminal,
     readLineText("Selecione um quiz pelo número para resolver, Enter para sair> ", QOpc),
@@ -87,6 +112,22 @@ menuQuizOpc("5",UserId) :-
         updateUser(UserId,UpdatedName,UpdatedEmail),
         readLineText("Usuário alterado. Enter para voltar...",_)) ; 
         readLineText("Nada a alterar. Enter para voltar...",_).
+
+menuQuizOpc("6",UserId) :-
+    clearScreen,
+    printBorderTerminal,
+    readLineText("Tópico que deseja buscar> ",Topic),
+    printBorderTerminal,
+    getAllUserAnsweredQuizzesUnique(UserId,Quizzes),
+    appendQuestions(Quizzes,AllQuestions),
+    printQuestions(AllQuestions,1),
+    length(AllQuestions, TotalQuestions),
+    printBorderTerminal,
+    readLineText("Quantas questões deve ter o seu quiz?> ", NQuestions),
+    number_string(NQuestionsInt, NQuestions),
+    ((NQuestionsInt > 0, NQuestionsInt =< TotalQuestions) -> 
+        creatingSuperQuiz(AllQuestions,NQuestionsInt,Topic,UserId) ; 
+        readLineText("Número fora do intervalo. Enter para voltar...",_)).
 
 menuQuizOpc("99", _) :- !.
 menuQuizOpc(_, _) :- readLineText("Opção não encontrada. Enter para voltar...", _).
@@ -135,3 +176,34 @@ menuQuizSelectedOpt("0",Quiz) :-
 
 menuQuizSelectedOpt("",_) :- !.
 menuQuizSelectedOpt(_,_) :- readLineText("Opção não encontrada. Enter para voltar...", _).
+
+appendQuestions([],[]).
+appendQuestions([H|T],TotalQuestions) :-
+    H = row(QuizId,_,_,_,_),
+    getAllQuestions(QuizId,Questions),
+    appendQuestions(T,TotalQuestionsN),
+    append(Questions,TotalQuestionsN,TotalQuestions).
+
+creatingSuperQuiz(Questions,TotalQuestionsN,Topic,UserId) :- 
+    random_permutation(Questions, Permutation),
+    take(TotalQuestionsN,Permutation,NewQuestions),
+    readLineText("Nome do seu Super Quiz> ",NameQuiz),
+    writeln("Criando super quiz, aguarde..."),
+    createQuiz(NameQuiz,Topic,UserId,UUIDQuiz),
+    creatingQuestionsSuperQuiz(UUIDQuiz,NewQuestions),
+    readLineText("Super quiz cadastrado! Enter para voltar...",_).
+
+creatingQuestionsSuperQuiz(_,[]).
+creatingQuestionsSuperQuiz(QuizId,[H|T]) :-
+    H = row(OldQuestionId,Formulation,DifficultyN,Duration,RightAnswer,_,TypeQuestion),
+    createQuestion(Formulation, DifficultyN, Duration, TypeQuestion, QuizId, QuestionId),
+    updateQuestionRightAnswer(QuestionId,RightAnswer),
+    getAllAnswers(OldQuestionId,Answers),
+    creatingAnswersSuperQuiz(Answers,QuestionId),
+    creatingQuestionsSuperQuiz(QuizId,T).   
+
+creatingAnswersSuperQuiz([], _).
+creatingAnswersSuperQuiz([H|T], NewQuestionId) :-
+    H = row(_,Text,_),
+    createAnswer(Text,NewQuestionId),
+    creatingAnswersSuperQuiz(T,NewQuestionId).

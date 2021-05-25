@@ -3,7 +3,8 @@
         createUser/3,
         getUserById/2,
         getUserByEmail/2,
-        updateUser/3
+        updateUser/3,
+        getUserPointsById/2
     ]).
 
 :- use_module( library(prosqlite) ).
@@ -20,7 +21,6 @@ getUserById(UserId, User) :-
     sqlite_query(db, Query, Row),
     User = Row.
     
-
 getUserByEmail(Email, User) :-
     format(atom(Query), "SELECT * FROM user WHERE email = '~w';",[Email]),
     sqlite_query(db, Query, User).
@@ -30,3 +30,6 @@ updateUser(UserId,Name,Email) :-
         [Name, Email, UserId]),
     sqlite_query(db, Query, _).
 
+getUserPointsById(UserId,Points) :-
+    format(atom(Query), "SELECT SUM(score) FROM user_answer WHERE user_id = '~w';",[UserId]),
+    sqlite_query(db, Query, Points).

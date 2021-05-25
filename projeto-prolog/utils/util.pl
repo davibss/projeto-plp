@@ -4,7 +4,8 @@
             clearScreen/0,
             updateAttribute/3,
             openFormulaInBrowser/1,
-            calculateScore/5
+            calculateScore/5,
+            take/3
             ]).
 
 :- use_module('./customizedOpenBrowser.pl',[www_open_url/1]).
@@ -55,3 +56,10 @@ calculateScore(StartTime,EndTime, Difficulty, MaxSeconds, Score) :-
     DifficultyInt is 10*(Difficulty + 1),
     Division is Diff/MaxSeconds, 
     Division =< 1 -> Score is DifficultyInt * ((1 - Division) + 1) ; Score = 0.
+
+% copiado da biblioteca hprolog, autores: Tom Schrijvers, Bart Demoen, Jan Wielemaker
+take(0, _, []) :- !.
+take(N, [H|TA], [H|TB]) :-
+    N > 0,
+    N2 is N - 1,
+    take(N2, TA, TB).

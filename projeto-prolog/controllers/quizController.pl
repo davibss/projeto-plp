@@ -1,21 +1,24 @@
 :- module(quizController, 
-    [createQuiz/3,
+    [createQuiz/4,
      getAllQuizzes/1,
      printQuizzes/2,
      getAllMyQuizzes/2,
      deleteQuiz/1,
      printQuiz/1,
-     updateQuiz/3
+     updateQuiz/3,
+     getAllQuizzesWithQuestions/1,
+     getAllUserAnsweredQuizzes/2,
+     getAllUserAnsweredQuizzesUnique/2
     ]).
 
 :- use_module( library(prosqlite) ).
 
 % cria um quiz a partir do nome do quiz, tópico do quiz e id do usuário
-createQuiz(Name, Topic, UserId) :-
+createQuiz(Name, Topic, UserId, UUIDQuiz) :-
     uuid(QuizUUID),
     format(atom(Query), "INSERT INTO quiz (quiz_id,name,topic,user_id,created_at) VALUES ('~w','~w','~w','~w',datetime('now','localtime'));",
         [QuizUUID,Name,Topic,UserId]),
-    sqlite_query( db, Query, _).
+    sqlite_query( db, Query, _), UUIDQuiz = QuizUUID.
 
 % formato do retorno: row(QuizId,Name,Topic,UserId,CreatedAt)
 getAllQuizzes(Quizzes) :-
@@ -25,6 +28,23 @@ getAllQuizzes(Quizzes) :-
 % formato do retorno: [row(QuizId,Name,Topic,UserId,CreatedAt)]
 getAllMyQuizzes(UserId,Quizzes) :-
     format(atom(Query), "SELECT * FROM quiz WHERE user_id = '~w';",[UserId]),
+    findall( Row, sqlite_query(db, Query, Row), Quizzes ).
+
+getAllQuizzesWithQuestions(Quizzes) :-
+    format(atom(Query), "SELECT DISTINCT qz.quiz_id, qz.name, qz.topic, qz.user_id,qz.created_at 
+        FROM quiz qz, question qe WHERE qz.quiz_id = qe.quiz_id;",[]),
+    findall( Row, sqlite_query(db, Query, Row), Quizzes ).
+
+getAllUserAnsweredQuizzes(UserId,Quizzes) :-
+    format(atom(Query), "SELECT q.quiz_id, q.name, q.topic, ua.user_answer_id,
+        ua.score, ua.rating, ua.created_at FROM quiz q, user_answer ua
+        WHERE q.quiz_id = ua.quiz_id AND ua.user_id = '~w';",[UserId]),
+    findall( Row, sqlite_query(db, Query, Row), Quizzes ).
+
+getAllUserAnsweredQuizzesUnique(UserId,Quizzes) :-
+    format(atom(Query), "SELECT DISTINCT q.quiz_id,q.name,q.topic,q.user_id,q.created_at
+        FROM quiz q, user_answer ua WHERE q.quiz_id = ua.quiz_id AND
+        ua.user_id = '~w';",[UserId]),
     findall( Row, sqlite_query(db, Query, Row), Quizzes ).
 
 updateQuiz(QuizId, NewName, NewTopic) :-

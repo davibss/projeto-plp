@@ -51,7 +51,7 @@ menuResolveQuiz(Quiz,UserId) :-
 
 menuResolveQuizOpc("s",Questions, QuizId, UserId) :- 
     menuQuestionResolve(Questions,Response),
-    delete_file('./htmlIO/formula.html'),
+    (exists_file('./htmlIO/formula.html') -> delete_file('./htmlIO/formula.html') ; !),
     clearScreen,
     printBorderTerminal,
     totalScore(Response,TotalScore),
