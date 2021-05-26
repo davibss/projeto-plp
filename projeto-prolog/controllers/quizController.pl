@@ -62,7 +62,6 @@ updateQuiz(QuizId, NewName, NewTopic) :-
 
 deleteQuiz(QuizId) :-
     format(atom(Query), "DELETE FROM quiz WHERE quiz_id = '~w';",[QuizId]),
-    sqlite_query(db, 'PRAGMA foreign_keys = ON;',_),
     sqlite_query(db, Query, _).
 
 printQuiz(Quiz) :- 

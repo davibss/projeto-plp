@@ -24,5 +24,4 @@ updateAnswer(AnswerId, Text) :-
 
 deleteAnswer(AnswerId) :-
     format(atom(Query), "DELETE FROM answer WHERE answer_id = '~w';",[AnswerId]),
-    sqlite_query(db, 'PRAGMA foreign_keys = ON;',_),
     sqlite_query(db, Query, _).

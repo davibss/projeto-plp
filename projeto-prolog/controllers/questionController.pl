@@ -39,7 +39,6 @@ updateQuestion(QuestionId, Formulation, Difficulty, Duration, RightAnswer) :-
 
 deleteQuestion(QuestionId) :-
     format(atom(Query), "DELETE FROM question WHERE question_id = '~w';",[QuestionId]),
-    sqlite_query(db, 'PRAGMA foreign_keys = ON;',_),
     sqlite_query(db, Query, _).
 
 printQuestion(Question) :- 
