@@ -39,6 +39,9 @@ Para saber qual versão do cabal está instalada no seu sistema:
 cabal --version
 ```
 
+### Execução em Prolog(SWI-PROLOG)
+Para acessar a página de instalação do projeto em prolog clique [aqui](https://github.com/davibss/projeto-plp/tree/main/projeto-prolog)
+
 ### Database (Sqlite3)
 
 Todas as queries para criação das tabelas estão na pasta **queries**
